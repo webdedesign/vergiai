@@ -3,58 +3,260 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Vergi Danışmanı Chatbot</title>
+  <title>VergiAI • Danışman Chatbot</title>
+  <meta name="color-scheme" content="dark light">
   <style>
-    body{font-family:system-ui,Arial,sans-serif;max-width:800px;margin:40px auto;padding:0 16px}
-    .bubble{padding:12px 14px;border-radius:12px;margin:8px 0;white-space:pre-wrap}
-    .me{background:#eef}
-    .bot{background:#eee}
-    small{color:#666;display:block;margin:4px 0}
-    #chat{min-height:200px}
-    textarea{width:100%}
+    :root{
+      --bg: #0b1020;
+      --card: rgba(255,255,255,.06);
+      --card-strong: rgba(255,255,255,.12);
+      --text: #eaf0ff;
+      --muted: #a9b3d6;
+      --brand: #6ea8fe;
+      --ok: #37d29a;
+      --warn:#f7b955;
+      --danger:#ff6b6b;
+      --ring: 0 0 0 2px rgba(110,168,254,.35);
+      --shadow: 0 10px 30px rgba(0,0,0,.25);
+      --blur: blur(12px);
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f6f8ff; --card: rgba(255,255,255,.72); --card-strong: rgba(255,255,255,.9);
+        --text:#0e1630; --muted:#556089; --brand:#3b82f6; --shadow:0 10px 30px rgba(16,24,40,.15);
+      }
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 10% -10%, #2c3e8a33, transparent 60%),
+        radial-gradient(1200px 900px at 100% 0%, #00d4ff22, transparent 55%),
+        linear-gradient(180deg, #0b1020 0%, #0b1020 60%, #0b1020 100%);
+      background-color: var(--bg);
+    }
+    .wrap{
+      display:flex; flex-direction:column; min-height:100dvh; gap:16px;
+      padding:24px; max-width:960px; margin:0 auto;
+    }
+    .nav{
+      display:flex; align-items:center; gap:12px; justify-content:space-between;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      padding:10px 14px; border-radius:16px;
+      background: var(--card);
+      backdrop-filter: var(--blur);
+      box-shadow: var(--shadow);
+    }
+    .logo{
+      width:34px; height:34px; display:grid; place-items:center;
+      border-radius:12px; background:linear-gradient(135deg,#3b82f6, #60a5fa, #22d3ee);
+      color:white; font-weight:800; letter-spacing:.5px;
+      box-shadow: 0 6px 20px rgba(59,130,246,.35);
+    }
+    .brand h1{font-size:16px; line-height:1; margin:0}
+    .brand small{display:block; color:var(--muted); font-size:12px; margin-top:2px}
+
+    .card{
+      flex:1; min-height:320px;
+      background: var(--card);
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter: var(--blur);
+      border-radius:24px; padding:16px;
+      box-shadow: var(--shadow);
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    .chat{
+      flex:1; overflow:auto; padding:8px; scroll-behavior:smooth;
+    }
+    .row{display:flex; gap:10px; margin:12px 0; align-items:flex-end}
+    .row.me{justify-content:flex-end}
+    .bubble{
+      max-width:min(78ch, 92%);
+      padding:12px 14px; border-radius:16px;
+      background: var(--card-strong);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow: 0 6px 18px rgba(0,0,0,.18);
+      white-space:pre-wrap; word-wrap:break-word;
+    }
+    .row.me .bubble{
+      background: linear-gradient(135deg, rgba(110,168,254,.25), rgba(110,168,254,.12));
+      border-color: rgba(110,168,254,.35);
+    }
+    .avatar{
+      width:34px;height:34px;border-radius:12px; flex:0 0 auto;
+      background:linear-gradient(135deg,#1f2937,#111827);
+      display:grid; place-items:center; color:#cbd5e1; font-weight:700; font-size:12px;
+      opacity:.9; border:1px solid rgba(255,255,255,.08)
+    }
+    .row.me .avatar{display:none}
+    .meta{color:var(--muted); font-size:12px; margin-top:8px}
+    .sources{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px}
+    .src{
+      font-size:12px; padding:6px 8px; border-radius:999px;
+      background:rgba(110,168,254,.14); border:1px solid rgba(110,168,254,.3);
+      color:#cfe0ff; text-decoration:none;
+    }
+    .src:hover{box-shadow:0 0 0 2px rgba(110,168,254,.35)}
+    .input{
+      position:sticky; bottom:0; left:0; right:0; margin-top:12px;
+      background: linear-gradient(to top, rgba(11,16,32,.85), transparent);
+      padding-top:8px;
+    }
+    .bar{
+      display:flex; gap:10px; align-items:center;
+      background: var(--card); border:1px solid rgba(255,255,255,.12);
+      backdrop-filter: var(--blur); border-radius:16px; padding:8px;
+    }
+    textarea{
+      flex:1; resize:none; max-height:140px; min-height:44px;
+      border:none; outline:none; color:var(--text); background:transparent;
+      font-size:16px; line-height:1.4; padding:6px 8px;
+    }
+    button{
+      appearance:none; border:none; cursor:pointer;
+      padding:12px 16px; border-radius:12px; font-weight:700;
+      color:#061226; background:linear-gradient(135deg,#6ea8fe,#22d3ee);
+      box-shadow: 0 10px 24px rgba(34,211,238,.25);
+    }
+    button:focus{outline:none; box-shadow: var(--shadow), var(--ring)}
+    .typing{display:inline-flex; gap:6px; align-items:center; color:var(--muted); font-size:13px; margin-left:6px}
+    .dot{width:6px;height:6px;border-radius:999px;background:var(--muted);opacity:.6;animation:blink 1.2s infinite}
+    .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+    @keyframes blink{0%,80%,100%{opacity:.2} 40%{opacity:1}}
+    .hint{font-size:12px; color:var(--muted); text-align:center; margin-top:4px}
+    .kbd{
+      border:1px solid rgba(255,255,255,.2); padding:2px 6px; border-radius:6px; font-size:11px;
+      background:rgba(255,255,255,.08);
+    }
   </style>
 </head>
 <body>
-  <h1>Vergi Danışmanı</h1>
-  <div id="chat"></div>
-  <form id="f">
-    <textarea id="m" rows="3" placeholder="Sorunu yaz (ör. KDV iadesi süreci)"></textarea><br/>
-    <button>Gönder</button>
-  </form>
+  <div class="wrap">
+    <div class="nav">
+      <div class="brand">
+        <div class="logo">V</div>
+        <div>
+          <h1>VergiAI</h1>
+          <small>Türkiye vergi mevzuatı için akıllı danışman</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="chat" class="chat">
+        <!-- karşılama -->
+        <div class="row">
+          <div class="avatar">AI</div>
+          <div>
+            <div class="bubble">
+              Merhaba! KDV iadesi, VUK 153/A, 6183, iç genelgeler ve tebliğler hakkında sorularını yanıtlayabilirim.
+              Örn: “2024/2 iç genelgesine göre seyyar EFT-POS zorunluluğu nedir?”
+            </div>
+            <div class="meta">Kaynaklı yanıtlar üretirim; altta “Kaynaklar” etiketlerini tıklayabilirsin.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input">
+        <form id="f" class="bar" autocomplete="off">
+          <textarea id="m" rows="1" placeholder="Sorunu yaz ve Enter’a bas…"></textarea>
+          <button id="send" type="submit">Gönder</button>
+        </form>
+        <div class="hint">İpucu: <span class="kbd">Shift</span>+<span class="kbd">Enter</span> satır ekler</div>
+      </div>
+    </div>
+  </div>
+
   <script>
     const chat = document.getElementById('chat');
     const form = document.getElementById('f');
     const m = document.getElementById('m');
+    const sendBtn = document.getElementById('send');
 
-    function add(type, text){
-      const div = document.createElement('div');
-      div.className = 'bubble ' + (type==='me'?'me':'bot');
-      div.innerText = text;
-      chat.appendChild(div);
-      window.scrollTo(0, document.body.scrollHeight);
+    function addRow({me=false, html, avatar='AI'}){
+      const row = document.createElement('div'); row.className = 'row' + (me?' me':'');
+      if(!me){
+        const av = document.createElement('div'); av.className='avatar'; av.textContent = avatar;
+        row.appendChild(av);
+      }
+      const wrap = document.createElement('div');
+      const bubble = document.createElement('div'); bubble.className='bubble'; bubble.innerHTML = html;
+      wrap.appendChild(bubble);
+      row.appendChild(wrap);
+      chat.appendChild(row);
+      chat.scrollTop = chat.scrollHeight;
+      return {row, bubble, wrap};
     }
 
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      const msg = m.value.trim(); if(!msg) return;
-      add('me', msg); m.value='';
-      try{
-        const r = await fetch('/api/chat', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ message: msg })
-        });
-        const data = await r.json();
-        add('bot', data.answer || 'Yanıt alınamadı.');
-        if (Array.isArray(data.sources) && data.sources.length){
-          const s = document.createElement('small');
-          s.innerText = 'Kaynaklar: ' + data.sources.map(x => x.title || x.id).join(', ');
-          chat.appendChild(s);
-        }
-      }catch(err){
-        add('bot', 'Bir hata oluştu: ' + err.message);
+    function addSources(sources=[]){
+      if(!sources.length) return;
+      const srcWrap = document.createElement('div'); srcWrap.className='sources';
+      sources.forEach(s=>{
+        const a = document.createElement('a'); a.className='src';
+        a.textContent = (s.title || s.id || 'Kaynak');
+        if(s.url){ a.href = s.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; }
+        else{ a.href = '#'; a.onclick = (e)=>e.preventDefault(); }
+        srcWrap.appendChild(a);
+      });
+      chat.lastElementChild?.querySelector('.bubble')?.after(srcWrap);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function setTyping(on){
+      let typing = document.querySelector('.typing');
+      if(on && !typing){
+        typing = document.createElement('div');
+        typing.className='typing';
+        typing.innerHTML = '<span>Yazıyor</span><div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+        const row = document.createElement('div'); row.className='row';
+        const av = document.createElement('div'); av.className='avatar'; av.textContent='AI';
+        row.appendChild(av);
+        const wrap = document.createElement('div'); wrap.appendChild(typing); row.appendChild(wrap);
+        chat.appendChild(row); chat.scrollTop = chat.scrollHeight;
+      } else if(!on && typing){
+        typing.closest('.row')?.remove();
       }
     }
+
+    function sanitize(s){ return s.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+
+    // Enter göndermek, Shift+Enter satır
+    m.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter' && !e.shiftKey){
+        e.preventDefault(); form.requestSubmit();
+      }
+    });
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const msg = m.value.trim(); if(!msg) return;
+      addRow({me:true, html:sanitize(msg)});
+      m.value=''; m.style.height='44px';
+
+      sendBtn.disabled = true; setTyping(true);
+      try{
+        const r = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ message: msg })});
+        const data = await r.json();
+        setTyping(false); sendBtn.disabled = false;
+
+        const text = sanitize(data.answer || 'Yanıt alınamadı.');
+        addRow({html:text});
+        addSources(Array.isArray(data.sources)? data.sources : []);
+      }catch(err){
+        setTyping(false); sendBtn.disabled = false;
+        addRow({html:`<span style="color:var(--danger)">Hata:</span> ${sanitize(err.message)}`});
+      }
+    });
+
+    // otomatik yükseklik
+    m.addEventListener('input', ()=>{
+      m.style.height = 'auto';
+      m.style.height = Math.min(m.scrollHeight, 140) + 'px';
+    });
   </script>
 </body>
 </html>
