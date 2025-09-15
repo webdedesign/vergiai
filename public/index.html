@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Vergi Danışmanı</title>
+  <title>Vergi Danışmanı Chatbot</title>
   <style>
     body{font-family:system-ui,Arial,sans-serif;max-width:800px;margin:40px auto;padding:0 16px}
-    .bubble{padding:12px 14px;border-radius:12px;margin:8px 0}
+    .bubble{padding:12px 14px;border-radius:12px;margin:8px 0;white-space:pre-wrap}
     .me{background:#eef}
     .bot{background:#eee}
-    small{color:#666}
+    small{color:#666;display:block;margin:4px 0}
     #chat{min-height:200px}
     textarea{width:100%}
   </style>
@@ -18,7 +18,7 @@
   <h1>Vergi Danışmanı</h1>
   <div id="chat"></div>
   <form id="f">
-    <textarea id="m" rows="3" placeholder="Sorunu yaz (ör. KDV iadesi)"></textarea><br/>
+    <textarea id="m" rows="3" placeholder="Sorunu yaz (ör. KDV iadesi süreci)"></textarea><br/>
     <button>Gönder</button>
   </form>
   <script>
@@ -40,7 +40,8 @@
       add('me', msg); m.value='';
       try{
         const r = await fetch('/api/chat', {
-          method:'POST', headers:{'Content-Type':'application/json'},
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ message: msg })
         });
         const data = await r.json();
