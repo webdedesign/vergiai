@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Vergi Danışmanı</title>
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;max-width:800px;margin:40px auto;padding:0 16px}
+    .bubble{padding:12px 14px;border-radius:12px;margin:8px 0}
+    .me{background:#eef}
+    .bot{background:#eee}
+    small{color:#666}
+    #chat{min-height:200px}
+    textarea{width:100%}
+  </style>
+</head>
+<body>
+  <h1>Vergi Danışmanı</h1>
+  <div id="chat"></div>
+  <form id="f">
+    <textarea id="m" rows="3" placeholder="Sorunu yaz (ör. KDV iadesi)"></textarea><br/>
+    <button>Gönder</button>
+  </form>
+  <script>
+    const chat = document.getElementById('chat');
+    const form = document.getElementById('f');
+    const m = document.getElementById('m');
+
+    function add(type, text){
+      const div = document.createElement('div');
+      div.className = 'bubble ' + (type==='me'?'me':'bot');
+      div.innerText = text;
+      chat.appendChild(div);
+      window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const msg = m.value.trim(); if(!msg) return;
+      add('me', msg); m.value='';
+      try{
+        const r = await fetch('/api/chat', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await r.json();
+        add('bot', data.answer || 'Yanıt alınamadı.');
+        if (Array.isArray(data.sources) && data.sources.length){
+          const s = document.createElement('small');
+          s.innerText = 'Kaynaklar: ' + data.sources.map(x => x.title || x.id).join(', ');
+          chat.appendChild(s);
+        }
+      }catch(err){
+        add('bot', 'Bir hata oluştu: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
