@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VergiAI • Admin Ingest</title>
+<style>
+  body{font-family:system-ui,Arial,sans-serif;max-width:900px;margin:40px auto;padding:0 16px}
+  h1{margin:0 0 12px}
+  .row{display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;margin:10px 0}
+  input,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px;font-size:15px}
+  textarea{min-height:180px}
+  .btns{display:flex;gap:10px;margin-top:12px}
+  button{padding:10px 14px;border-radius:10px;border:1px solid #94a3b8;cursor:pointer}
+  .ok{color:#065f46}
+  .err{color:#991b1b}
+  small{color:#64748b}
+</style>
+</head>
+<body>
+  <h1>Admin • Ingest</h1>
+  <div class="row">
+    <label>Admin Token</label>
+    <input id="token" placeholder="x-admin-token" />
+  </div>
+  <small>Token tarayıcında saklanır (localStorage). Üçüncü kişilerle paylaşma.</small>
+
+  <div class="row"><label>Başlık</label><input id="title" placeholder="Örn: KDV İadesi Rehberi"></div>
+  <div class="row"><label>Kaynak URL</label><input id="url" placeholder="https://... (opsiyonel)"></div>
+  <div class="row"><label>Etiketler</label><input id="tags" placeholder="virgülle: kdv,iade (ops.)"></div>
+  <div class="row" style="grid-template-columns:1fr"><textarea id="text" placeholder="Metni buraya yapıştır"></textarea></div>
+
+  <div class="btns">
+    <button id="save">Kaydet (Token)</button>
+    <button id="send">Ingest Gönder</button>
+  </div>
+
+  <pre id="out"></pre>
+
+<script>
+  const $ = (s)=>document.querySelector(s);
+  const tokenEl = $('#token'), titleEl = $('#title'), urlEl = $('#url'), tagsEl = $('#tags'), textEl = $('#text'), outEl = $('#out');
+
+  // token yükle
+  tokenEl.value = localStorage.getItem('vergiai_admin_token') || '';
+
+  $('#save').onclick = ()=> {
+    localStorage.setItem('vergiai_admin_token', tokenEl.value.trim());
+    write('✓ Token kaydedildi', true);
+  };
+
+  $('#send').onclick = async ()=> {
+    const token = (localStorage.getItem('vergiai_admin_token') || '').trim();
+    if (!token) return write('x-admin-token boş! Önce token kaydet.', false);
+    const body = {
+      title: titleEl.value.trim() || 'Belge',
+      url: urlEl.value.trim() || undefined,
+      tags: (tagsEl.value || '').split(',').map(s=>s.trim()).filter(Boolean),
+      text: textEl.value
+    };
+    write('Gönderiliyor...', true);
+    try{
+      const r = await fetch('/api/ingest', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'x-admin-token': token },
+        body: JSON.stringify(body)
+      });
+      const t = await r.text();
+      write(`status ${r.status}\n${t}`, r.ok);
+    }catch(e){ write(String(e), false); }
+  };
+
+  function write(msg, ok){ outEl.textContent = msg; outEl.className = ok ? 'ok' : 'err'; }
+</script>
+</body>
+</html>
