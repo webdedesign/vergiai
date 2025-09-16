@@ -1,30 +1,26 @@
 export const onRequest = async ({ request, env }: any) => {
-  if (request.method !== "POST") {
-    return json({ error: "method not allowed" }, 405);
-  }
+  if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
 
-  // Basit admin koruması (ENV’de varsa)
-  const adminHeader = request.headers.get("x-admin-token");
-  if (env.ADMIN_TOKEN && adminHeader !== env.ADMIN_TOKEN) {
-    return json({ error: "unauthorized" }, 401);
-  }
+  // Admin koruması
+  const provided = (request.headers.get("x-admin-token") || "").trim();
+  const expected = (env.ADMIN_TOKEN || "").trim(); // Production ENV'de tanımlı olmalı
+  if (expected && provided !== expected) return json({ error: "unauthorized" }, 401);
 
+  // Gövdeyi al
   let payload: any;
-  try {
-    payload = await request.json();
-  } catch {
-    return json({ error: "invalid json" }, 400);
-  }
-
+  try { payload = await request.json(); } catch { return json({ error: "invalid json" }, 400); }
   const { title = "Belge", text = "", url, tags = [] } = payload || {};
   if (!text || !text.trim()) return json({ error: "text required" }, 400);
 
+  // Ayarlar
   const qurl = (env.QDRANT_URL || "").replace(/\/+$/, "");
   const collection = env.QDRANT_COLLECTION || "vergi";
 
+  // Parçala
   const chunks = splitText(text, 800, 120);
   const points: any[] = [];
 
+  // Embedding
   try {
     for (const chunk of chunks) {
       const embOut: any = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: chunk });
@@ -43,6 +39,7 @@ export const onRequest = async ({ request, env }: any) => {
     return json({ error: "embedding_failed", detail: String(e?.message || e) }, 502);
   }
 
+  // Qdrant'a yaz
   try {
     const up = await fetch(`${qurl}/collections/${collection}/points?wait=true`, {
       method: "PUT",
@@ -71,7 +68,6 @@ function splitText(s: string, size = 800, overlap = 120) {
   }
   return out;
 }
-
 function json(obj: any, status = 200) {
   return new Response(JSON.stringify(obj), { status, headers: { "Content-Type": "application/json" } });
 }
