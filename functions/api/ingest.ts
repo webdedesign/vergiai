@@ -1,58 +1,66 @@
-// functions/api/ingest.js  (CommonJS)
-async function onRequestPost(context) {
-  const { request, env } = context;
+export const onRequest = async ({ request, env }: any) => {
+  if (request.method !== "POST") {
+    return json({ error: "method not allowed" }, 405);
+  }
 
-  // Admin koruması (ENV'de varsa)
-  const adminHeader = request.headers.get('x-admin-token');
+  // Basit admin koruması (ENV’de varsa)
+  const adminHeader = request.headers.get("x-admin-token");
   if (env.ADMIN_TOKEN && adminHeader !== env.ADMIN_TOKEN) {
-    return new Response(JSON.stringify({ error: "unauthorized" }), {
-      status: 401, headers: { "Content-Type": "application/json" }
-    });
+    return json({ error: "unauthorized" }, 401);
   }
 
-  const { title = "Belge", text = "", url, tags = [] } =
-    await request.json().catch(() => ({}));
-
-  if (!text.trim()) {
-    return new Response(JSON.stringify({ error: "text required" }), {
-      status: 400, headers: { "Content-Type": "application/json" }
-    });
+  let payload: any;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ error: "invalid json" }, 400);
   }
+
+  const { title = "Belge", text = "", url, tags = [] } = payload || {};
+  if (!text || !text.trim()) return json({ error: "text required" }, 400);
 
   const qurl = (env.QDRANT_URL || "").replace(/\/+$/, "");
   const collection = env.QDRANT_COLLECTION || "vergi";
 
   const chunks = splitText(text, 800, 120);
-  const points = [];
+  const points: any[] = [];
 
-  for (const chunk of chunks) {
-    const embOut = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: chunk });
-    const vector = Array.isArray(embOut?.data?.[0]?.embedding)
-      ? embOut.data[0].embedding
-      : Array.isArray(embOut?.data) ? embOut.data
-      : embOut;
+  try {
+    for (const chunk of chunks) {
+      const embOut: any = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: chunk });
+      const vector =
+        Array.isArray(embOut?.data?.[0]?.embedding) ? embOut.data[0].embedding :
+        Array.isArray(embOut?.data) ? embOut.data :
+        embOut;
 
-    points.push({
-      id: crypto.randomUUID(),
-      vector,
-      payload: { title, url, tags, text: chunk, createdAt: new Date().toISOString() }
-    });
+      points.push({
+        id: crypto.randomUUID(),
+        vector,
+        payload: { title, url, tags, text: chunk, createdAt: new Date().toISOString() }
+      });
+    }
+  } catch (e: any) {
+    return json({ error: "embedding_failed", detail: String(e?.message || e) }, 502);
   }
 
-  const up = await fetch(`${qurl}/collections/${collection}/points?wait=true`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json", "api-key": env.QDRANT_API_KEY },
-    body: JSON.stringify({ points })
-  });
+  try {
+    const up = await fetch(`${qurl}/collections/${collection}/points?wait=true`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "api-key": env.QDRANT_API_KEY },
+      body: JSON.stringify({ points })
+    });
+    if (!up.ok) {
+      const t = await up.text().catch(() => "");
+      return json({ error: "qdrant_write_failed", status: up.status, body: t }, 502);
+    }
+    return json({ ok: true, inserted: points.length });
+  } catch (e: any) {
+    return json({ error: "qdrant_request_failed", detail: String(e?.message || e) }, 502);
+  }
+};
 
-  return new Response(JSON.stringify({ ok: up.ok, inserted: points.length }), {
-    status: up.ok ? 200 : 500,
-    headers: { "Content-Type": "application/json" }
-  });
-}
-
-function splitText(s, size = 800, overlap = 120) {
-  const out = [];
+function splitText(s: string, size = 800, overlap = 120) {
+  const out: string[] = [];
   let i = 0;
   while (i < s.length) {
     const end = Math.min(s.length, i + size);
@@ -64,4 +72,6 @@ function splitText(s, size = 800, overlap = 120) {
   return out;
 }
 
-module.exports = { onRequestPost };
+function json(obj: any, status = 200) {
+  return new Response(JSON.stringify(obj), { status, headers: { "Content-Type": "application/json" } });
+}
