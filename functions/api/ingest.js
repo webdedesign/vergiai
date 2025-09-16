@@ -1,5 +1,16 @@
 export async function onRequestPost(context) {
   const { request, env } = context;
+
+  // Basit admin koruması
+  const token = request.headers.get('x-admin-token');
+  if (!token || token !== env.ADMIN_TOKEN) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 });
+  }
+
+  // ... mevcut kodun devamı ...
+
+export async function onRequestPost(context) {
+  const { request, env } = context;
   const { title="Belge", text="", url, tags=[] } = await request.json().catch(() => ({}));
   if (!text.trim()) return new Response(JSON.stringify({ error:"text required" }),{status:400});
 
