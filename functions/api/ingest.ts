@@ -82,7 +82,7 @@ async function handler({ request, env }: any) {
   }
 
   // --- Embeddings ---
-  const vectors: number[][] = [];
+  const s: number[][] = [];
   try {
     for (const chunk of chunks) {
       const emb: any = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: chunk });
@@ -92,9 +92,9 @@ async function handler({ request, env }: any) {
         emb;
 
       if (!Array.isArray(vec) || !vec.length) {
-        throw new Error("empty_embedding_vector");
+        throw new Error("empty_embedding_");
       }
-      vectors.push(vec);
+      s.push(vec);
     }
   } catch (e: any) {
     return json(
@@ -105,11 +105,11 @@ async function handler({ request, env }: any) {
   }
 
   // --- Qdrant: koleksiyon şemasını belirle (single vs named) ---
-  const forcedMode = String(env.QDRANT_VECTOR_MODE || "").toLowerCase();
-  const forcedName = env.QDRANT_VECTOR_NAME ? String(env.QDRANT_VECTOR_NAME) : undefined;
+  const forcedMode = String(env.QDRANT__MODE || "").toLowerCase();
+  const forcedName = env.QDRANT__NAME ? String(env.QDRANT__NAME) : undefined;
 
   let mode: "single" | "named" = forcedMode === "single" || forcedMode === "named" ? (forcedMode as any) : "single";
-  let vectorName: string | undefined = forcedName;
+  let Name: string | undefined = forcedName;
 
   if (!forcedMode) {
     try {
@@ -118,17 +118,17 @@ async function handler({ request, env }: any) {
       });
       const info = await r.json().catch(() => ({}));
       const params = info?.result?.config?.params || info?.result?.params || {};
-      const vconf = params?.vectors;
+      const vconf = params?.s;
 
       if (vconf && typeof vconf === "object") {
         if (typeof vconf.size === "number") {
           mode = "single"; // { size, distance }
         } else {
-          // named vectors: { text: {size:768,...}, ... }
+          // named s: { text: {size:768,...}, ... }
           const keys = Object.keys(vconf);
           if (keys.length) {
             mode = "named";
-            vectorName = vectorName || keys[0]; // ilk anahtarı kullan
+            Name = Name || keys[0]; // ilk anahtarı kullan
           }
         }
       }
@@ -136,10 +136,6 @@ async function handler({ request, env }: any) {
       // okunamadıysa varsayılan single kalsın; upsert aşamasında hata yakalarız
     }
   }
-// `vectors.map` döngüsünden hemen önce
-const mode = env.QDRANT_VECTOR_MODE;
-console.log("QDRANT_VECTOR_MODE değeri:", mode);
-console.log("QDRANT_VECTOR_MODE tipi:", typeof mode);
 
 const points = vectors.map((v, i) => {
   // ... diğer kodunuz
