@@ -136,7 +136,13 @@ async function handler({ request, env }: any) {
       // okunamadıysa varsayılan single kalsın; upsert aşamasında hata yakalarız
     }
   }
+// `vectors.map` döngüsünden hemen önce
+const mode = env.QDRANT_VECTOR_MODE;
+console.log("QDRANT_VECTOR_MODE değeri:", mode);
+console.log("QDRANT_VECTOR_MODE tipi:", typeof mode);
 
+const points = vectors.map((v, i) => {
+  // ... diğer kodunuz
   // --- Upsert body'yi hazırla ---
   const now = Date.now();
   const points = vectors.map((v, i) => {
