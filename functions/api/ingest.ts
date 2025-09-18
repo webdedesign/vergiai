@@ -82,7 +82,7 @@ async function handler({ request, env }: any) {
   }
 
   // --- Embeddings ---
-  const s: number[][] = [];
+  const vectors: number[][] = [];
   try {
     for (const chunk of chunks) {
       const emb: any = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: chunk });
@@ -94,7 +94,7 @@ async function handler({ request, env }: any) {
       if (!Array.isArray(vec) || !vec.length) {
         throw new Error("empty_embedding_");
       }
-      s.push(vec);
+      vectors.push(vec);
     }
   } catch (e: any) {
     return json(
@@ -105,16 +105,15 @@ async function handler({ request, env }: any) {
   }
 
   // --- Qdrant: koleksiyon şemasını belirle (single vs named) ---
-  // BURADA DEĞİŞİKLİK YAPILDI:
   const forcedMode = String(env.QDRANT_VECTOR_MODE || "").toLowerCase();
   const forcedName = env.QDRANT_VECTOR_NAME ? String(env.QDRANT_VECTOR_NAME) : undefined;
 
-  console.log("QDRANT_VECTOR_MODE değeri:", forcedMode);
-  console.log("QDRANT_VECTOR_NAME değeri:", forcedName);
-  console.log("QDRANT_VECTOR_MODE tipi:", typeof forcedMode);
+  console.log("QDRANT_VECTOR_MODE değeri:", forcedMode);
+  console.log("QDRANT_VECTOR_NAME değeri:", forcedName);
+  console.log("QDRANT_VECTOR_MODE tipi:", typeof forcedMode);
 
   let mode: "single" | "named" = forcedMode === "single" || forcedMode === "named" ? (forcedMode as any) : "single";
-  let Name: string | undefined = forcedName;
+  let vectorName: string | undefined = forcedName;
 
   if (!forcedMode) {
     try {
@@ -133,7 +132,7 @@ async function handler({ request, env }: any) {
           const keys = Object.keys(vconf);
           if (keys.length) {
             mode = "named";
-            Name = Name || keys[0]; // ilk anahtarı kullan
+            vectorName = vectorName || keys[0]; // ilk anahtarı kullan
           }
         }
       }
@@ -142,8 +141,6 @@ async function handler({ request, env }: any) {
     }
   }
 
-const points = vectors.map((v, i) => {
-  // ... diğer kodunuz
   // --- Upsert body'yi hazırla ---
   const now = Date.now();
   const points = vectors.map((v, i) => {
@@ -160,7 +157,7 @@ const points = vectors.map((v, i) => {
     if (mode === "single") {
       basePoint.vector = v;
     } else {
-      const name = Name || "text";
+      const name = vectorName || "text";
       basePoint.vectors = { [name]: v };
     }
     return basePoint;
