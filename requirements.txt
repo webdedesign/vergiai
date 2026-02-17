@@ -1,0 +1,6 @@
+anthropic
+streamlit
+lancedb
+pymupdf
+pandas
+python-dotenv
