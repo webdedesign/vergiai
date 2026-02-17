@@ -5,8 +5,52 @@ import lancedb
 from anthropic import Anthropic
 from dotenv import load_dotenv
 import re
+import os
+import urllib.request
+import urllib.parse
 
 load_dotenv()
+
+# ── PDF'leri GitHub'dan indir ve veritabani olustur ──
+GITHUB_RAW = "https://raw.githubusercontent.com/webdedesign/vergiai/main/"
+PDFLER = [
+    "1.5.3065.pdf",
+    "kdvira_kilavuzu.pdf",
+    "kdv_genteb.pdf",
+    "Pratik Bilgilerle KDV   .pdf",
+]
+
+@st.cache_resource
+def pdf_indir_ve_yukle():
+    try:
+        import fitz
+        db_temp = lancedb.connect("./veritabani")
+        if "vergi_belgeleri" in str(db_temp.list_tables()):
+            return "mevcut"
+        os.makedirs("belgeler", exist_ok=True)
+        veriler = []
+        for pdf_adi in PDFLER:
+            hedef = os.path.join("belgeler", pdf_adi)
+            if not os.path.exists(hedef):
+                url = GITHUB_RAW + urllib.parse.quote(pdf_adi)
+                urllib.request.urlretrieve(url, hedef)
+            doc = fitz.open(hedef)
+            for i in range(len(doc)):
+                metin = doc[i].get_text()
+                if not metin.strip():
+                    continue
+                kelimeler = metin.split()
+                for j in range(0, len(kelimeler), 360):
+                    parca = " ".join(kelimeler[j:j+400])
+                    if parca.strip():
+                        veriler.append({"belge": os.path.splitext(pdf_adi)[0], "sayfa": i+1, "metin": parca})
+        if veriler:
+            db_temp.create_table("vergi_belgeleri", data=veriler)
+        return "yuklendi"
+    except Exception as e:
+        return f"hata: {e}"
+
+pdf_indir_ve_yukle()
 
 st.set_page_config(page_title="vergiAI", page_icon="⚖", layout="centered", initial_sidebar_state="collapsed")
 
