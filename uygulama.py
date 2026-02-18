@@ -2,7 +2,6 @@ import warnings
 warnings.filterwarnings("ignore")
 import streamlit as st
 from anthropic import Anthropic
-import os
 import re
 
 try:
@@ -45,12 +44,15 @@ st.markdown("""
 
 @st.cache_resource
 def baglanti():
-    client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
-    if not PINECONE_AVAILABLE:
+    # Streamlit secrets kullan
+    anthropic_key = st.secrets.get("ANTHROPIC_API_KEY")
+    pinecone_key = st.secrets.get("PINECONE_API_KEY")
+    
+    client = Anthropic(api_key=anthropic_key)
+    
+    if not PINECONE_AVAILABLE or not pinecone_key:
         return None, client, 0
-    pinecone_key = os.getenv("PINECONE_API_KEY")
-    if not pinecone_key:
-        return None, client, 0
+    
     try:
         pc = Pinecone(api_key=pinecone_key)
         index_name = "vergiai"
