@@ -1,6 +1,6 @@
 anthropic
 streamlit
-lancedb
+pinecone-client
 pymupdf
-pandas
 python-dotenv
+sentence-transformers
