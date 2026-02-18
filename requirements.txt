@@ -1,6 +1,6 @@
 anthropic
 streamlit
-pinecone-client
+pinecone
 pymupdf
 python-dotenv
 sentence-transformers

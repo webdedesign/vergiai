@@ -1,84 +1,34 @@
 import warnings
 warnings.filterwarnings("ignore")
 import streamlit as st
-import lancedb
 from anthropic import Anthropic
-from dotenv import load_dotenv
-import re
 import os
-import urllib.request
-import urllib.parse
+import re
 
-load_dotenv()
-
-# ── PDF'leri GitHub'dan indir ve veritabani olustur ──
-GITHUB_RAW = "https://raw.githubusercontent.com/webdedesign/vergiai/main/"
-PDFLER = [
-    "1.5.3065.pdf",
-    "kdvira_kilavuzu.pdf",
-    "kdv_genteb.pdf",
-    "Pratik Bilgilerle KDV   .pdf",
-]
-
-@st.cache_resource
-def pdf_indir_ve_yukle():
-    try:
-        import fitz
-        db_temp = lancedb.connect("./veritabani")
-        if "vergi_belgeleri" in str(db_temp.list_tables()):
-            return "mevcut"
-        os.makedirs("belgeler", exist_ok=True)
-        veriler = []
-        for pdf_adi in PDFLER:
-            hedef = os.path.join("belgeler", pdf_adi)
-            if not os.path.exists(hedef):
-                url = GITHUB_RAW + urllib.parse.quote(pdf_adi)
-                urllib.request.urlretrieve(url, hedef)
-            doc = fitz.open(hedef)
-            for i in range(len(doc)):
-                metin = doc[i].get_text()
-                if not metin.strip():
-                    continue
-                kelimeler = metin.split()
-                for j in range(0, len(kelimeler), 360):
-                    parca = " ".join(kelimeler[j:j+400])
-                    if parca.strip():
-                        veriler.append({"belge": os.path.splitext(pdf_adi)[0], "sayfa": i+1, "metin": parca})
-        if veriler:
-            db_temp.create_table("vergi_belgeleri", data=veriler)
-        return "yuklendi"
-    except Exception as e:
-        return f"hata: {e}"
-
-pdf_indir_ve_yukle()
+try:
+    from pinecone import Pinecone, ServerlessSpec
+    PINECONE_AVAILABLE = True
+except:
+    PINECONE_AVAILABLE = False
 
 st.set_page_config(page_title="vergiAI", page_icon="⚖", layout="centered", initial_sidebar_state="collapsed")
 
 def md_to_html(text):
-    """Markdown'i temiz HTML'e cevir"""
-    # Basliklar
     text = re.sub(r'^### (.+)$', r'<h3>\1</h3>', text, flags=re.MULTILINE)
     text = re.sub(r'^## (.+)$', r'<h2>\1</h2>', text, flags=re.MULTILINE)
     text = re.sub(r'^# (.+)$', r'<h1>\1</h1>', text, flags=re.MULTILINE)
-    # Bold
     text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
-    # Italik
     text = re.sub(r'\*(.+?)\*', r'<em>\1</em>', text)
-    # Yatay cizgi
     text = re.sub(r'^---+$', r'<hr>', text, flags=re.MULTILINE)
-    # Liste
     text = re.sub(r'^\* (.+)$', r'<li>\1</li>', text, flags=re.MULTILINE)
     text = re.sub(r'^- (.+)$', r'<li>\1</li>', text, flags=re.MULTILINE)
     text = re.sub(r'^(\d+)\. (.+)$', r'<li>\2</li>', text, flags=re.MULTILINE)
-    # Liste satirlarini ul ile sar
     text = re.sub(r'(<li>.*?</li>\n?)+', lambda m: '<ul>' + m.group(0) + '</ul>', text, flags=re.DOTALL)
-    # Paragraflar
     paragraphs = text.split('\n\n')
     result = []
     for p in paragraphs:
         p = p.strip()
-        if not p:
-            continue
+        if not p: continue
         if p.startswith('<h') or p.startswith('<ul') or p.startswith('<hr'):
             result.append(p)
         else:
@@ -89,127 +39,49 @@ def md_to_html(text):
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
-
-*, *::before, *::after { box-sizing: border-box; }
-html, body, .stApp { background: #050505 !important; font-family: 'Sora', sans-serif !important; }
-.main .block-container { padding: 2rem 1.5rem 4rem !important; max-width: 780px !important; }
-header[data-testid="stHeader"], footer, section[data-testid="stSidebar"] { display:none !important; }
-
-.stApp::before {
-    content: ''; position: fixed; inset: 0;
-    background-image: linear-gradient(rgba(240,168,32,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(240,168,32,0.04) 1px, transparent 1px);
-    background-size: 56px 56px; pointer-events: none; z-index: 0;
-}
-.stApp::after {
-    content: ''; position: fixed; width: 600px; height: 600px;
-    background: radial-gradient(circle, rgba(240,168,32,0.08) 0%, transparent 70%);
-    top: -200px; right: -100px; border-radius: 50%; filter: blur(100px);
-    pointer-events: none; z-index: 0;
-}
-
-/* TOPBAR */
-.va-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:0; position:relative; z-index:10; }
-.va-logo { font-weight:800; font-size:20px; letter-spacing:-0.5px; color:#f5f0e8; }
-.va-logo-ai { color:#ffc040; text-shadow:0 0 20px rgba(255,192,64,0.4); }
-.va-badge { display:inline-flex; align-items:center; gap:7px; background:rgba(240,168,32,0.08); border:1px solid rgba(240,168,32,0.2); border-radius:100px; padding:5px 14px; font-family:'DM Mono',monospace; font-size:11px; color:#f0a820; letter-spacing:1px; }
-.va-pdot { display:inline-block; width:6px; height:6px; background:#ffc040; border-radius:50%; box-shadow:0 0 8px #ffc040; animation:blink 2s ease-in-out infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-/* HERO */
-.va-hero { text-align:center; padding:48px 0 40px; position:relative; z-index:10; }
-.va-eyebrow { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:4px; color:#f0a820; text-transform:uppercase; margin-bottom:16px; opacity:0.9; }
-.va-title { font-weight:800; font-size:clamp(52px,10vw,88px); line-height:0.92; letter-spacing:-4px; margin-bottom:14px; }
-.va-title-vergi { background:linear-gradient(135deg,#f5f0e8 0%,#c8b898 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-.va-title-ai { background:linear-gradient(135deg,#ffc040 0%,#e09010 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; filter:drop-shadow(0 0 30px rgba(255,192,64,0.3)); }
-.va-sub { font-size:16px; font-weight:400; color:#707070; margin-bottom:24px; }
-.va-chips { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
-.va-chip { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:100px; padding:7px 16px; font-size:13px; font-weight:500; color:#606060; }
-
-/* INPUT */
-.stTextInput > div > div > input {
-    background: #101010 !important; border: 1.5px solid #282828 !important;
-    border-radius: 14px !important; color: #f0ebe0 !important;
-    font-family: 'Sora', sans-serif !important; font-size: 16px !important;
-    padding: 16px 20px !important; caret-color: #ffc040 !important;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.4) !important;
-}
-.stTextInput > div > div > input:focus { border-color: rgba(240,168,32,0.6) !important; box-shadow: 0 0 0 3px rgba(240,168,32,0.08) !important; }
-.stTextInput > div > div > input::placeholder { color: #404040 !important; }
-.stTextInput label { display:none !important; }
-
-/* BUTON */
-.stButton > button {
-    background: linear-gradient(135deg,#ffc040,#e09010) !important; color:#000 !important;
-    border:none !important; border-radius:14px !important; font-family:'Sora',sans-serif !important;
-    font-size:16px !important; font-weight:700 !important; padding:16px 28px !important;
-    width:100% !important; box-shadow:0 4px 20px rgba(240,168,32,0.3) !important;
-}
-.stButton > button:hover { transform:translateY(-1px) !important; box-shadow:0 6px 28px rgba(240,168,32,0.45) !important; }
-
-/* MESAJLAR */
-.va-msg-user { display:flex; justify-content:flex-end; margin:12px 0; }
-.va-bubble-user { background:#141414; border:1px solid rgba(255,255,255,0.09); border-radius:16px 16px 4px 16px; padding:14px 20px; font-size:16px; color:#e8e0d0; max-width:75%; line-height:1.65; }
-
-.va-msg-bot { display:flex; gap:14px; margin:14px 0; align-items:flex-start; }
-.va-avatar { width:32px; height:32px; flex-shrink:0; background:linear-gradient(135deg,#141414,#1f1f1f); border:1px solid #282828; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:15px; margin-top:3px; box-shadow:0 0 16px rgba(240,168,32,0.1); }
-
-/* BOT METIN - dogrudan HTML render edilecek */
-.va-bot-text { flex:1; }
-.va-bot-text p { color:#d0c8b8; font-size:15px; line-height:1.85; margin-bottom:12px; text-align:justify; font-family:'Sora',sans-serif; }
-.va-bot-text h1, .va-bot-text h2, .va-bot-text h3 { color:#f0ebe0; font-weight:700; font-size:16px; margin:16px 0 8px; font-family:'Sora',sans-serif; }
-.va-bot-text strong { color:#f0ebe0; font-weight:600; }
-.va-bot-text em { color:#c8c0b0; font-style:italic; }
-.va-bot-text ul { margin:8px 0 12px 20px; }
-.va-bot-text li { color:#d0c8b8; font-size:15px; line-height:1.8; margin-bottom:5px; font-family:'Sora',sans-serif; }
-.va-bot-text hr { border:none; border-top:1px solid #1e1e1e; margin:12px 0; }
-
-.va-source { display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; padding-top:12px; border-top:1px solid #141414; align-items:center; }
-.va-slabel { font-family:'DM Mono',monospace; font-size:10px; color:#303030; letter-spacing:2px; text-transform:uppercase; }
-.va-schip { font-family:'DM Mono',monospace; font-size:11px; color:#f0a820; background:rgba(240,168,32,0.08); border:1px solid rgba(240,168,32,0.2); border-radius:6px; padding:3px 10px; }
-.va-divider { border:none; border-top:1px solid #111; margin:16px 0; }
-
-/* ÖRNEK SORU BUTONLARI */
-div[data-testid="column"] .stButton > button {
-    background:transparent !important; color:#505050 !important;
-    border:1px solid #1c1c1c !important; border-radius:100px !important;
-    font-size:12px !important; font-weight:500 !important;
-    padding:8px 14px !important; box-shadow:none !important;
-    transform:none !important;
-}
-div[data-testid="column"] .stButton > button:hover {
-    border-color:rgba(240,168,32,0.4) !important; color:#f0a820 !important;
-    background:rgba(240,168,32,0.05) !important; transform:none !important;
-}
+*,*::before,*::after{box-sizing:border-box}html,body,.stApp{background:#050505 !important;font-family:'Sora',sans-serif !important}.main .block-container{padding:2rem 1.5rem 4rem !important;max-width:780px !important}header[data-testid="stHeader"],footer,section[data-testid="stSidebar"]{display:none !important}.stApp::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(240,168,32,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(240,168,32,0.04) 1px,transparent 1px);background-size:56px 56px;pointer-events:none;z-index:0}.stApp::after{content:'';position:fixed;width:600px;height:600px;background:radial-gradient(circle,rgba(240,168,32,0.08) 0%,transparent 70%);top:-200px;right:-100px;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}.va-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:0;position:relative;z-index:10}.va-logo{font-weight:800;font-size:20px;letter-spacing:-0.5px;color:#f5f0e8}.va-logo-ai{color:#ffc040;text-shadow:0 0 20px rgba(255,192,64,0.4)}.va-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(240,168,32,0.08);border:1px solid rgba(240,168,32,0.2);border-radius:100px;padding:5px 14px;font-family:'DM Mono',monospace;font-size:11px;color:#f0a820;letter-spacing:1px}.va-pdot{display:inline-block;width:6px;height:6px;background:#ffc040;border-radius:50%;box-shadow:0 0 8px #ffc040;animation:blink 2s ease-in-out infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}.va-hero{text-align:center;padding:48px 0 40px;position:relative;z-index:10}.va-eyebrow{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:4px;color:#f0a820;text-transform:uppercase;margin-bottom:16px;opacity:0.9}.va-title{font-weight:800;font-size:clamp(52px,10vw,88px);line-height:0.92;letter-spacing:-4px;margin-bottom:14px}.va-title-vergi{background:linear-gradient(135deg,#f5f0e8 0%,#c8b898 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}.va-title-ai{background:linear-gradient(135deg,#ffc040 0%,#e09010 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 30px rgba(255,192,64,0.3))}.va-sub{font-size:16px;font-weight:400;color:#707070;margin-bottom:24px}.va-chips{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.va-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:100px;padding:7px 16px;font-size:13px;font-weight:500;color:#606060}.stTextInput>div>div>input{background:#101010 !important;border:1.5px solid #282828 !important;border-radius:14px !important;color:#f0ebe0 !important;font-family:'Sora',sans-serif !important;font-size:16px !important;padding:16px 20px !important;caret-color:#ffc040 !important;box-shadow:0 4px 24px rgba(0,0,0,0.4) !important}.stTextInput>div>div>input:focus{border-color:rgba(240,168,32,0.6) !important;box-shadow:0 0 0 3px rgba(240,168,32,0.08) !important}.stTextInput>div>div>input::placeholder{color:#404040 !important}.stTextInput label{display:none !important}.stButton>button{background:linear-gradient(135deg,#ffc040,#e09010) !important;color:#000 !important;border:none !important;border-radius:14px !important;font-family:'Sora',sans-serif !important;font-size:16px !important;font-weight:700 !important;padding:16px 28px !important;width:100% !important;box-shadow:0 4px 20px rgba(240,168,32,0.3) !important}.stButton>button:hover{transform:translateY(-1px) !important;box-shadow:0 6px 28px rgba(240,168,32,0.45) !important}.va-msg-user{display:flex;justify-content:flex-end;margin:12px 0}.va-bubble-user{background:#141414;border:1px solid rgba(255,255,255,0.09);border-radius:16px 16px 4px 16px;padding:14px 20px;font-size:16px;color:#e8e0d0;max-width:75%;line-height:1.65}.va-msg-bot{display:flex;gap:14px;margin:14px 0;align-items:flex-start}.va-avatar{width:32px;height:32px;flex-shrink:0;background:linear-gradient(135deg,#141414,#1f1f1f);border:1px solid#282828;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-top:3px;box-shadow:0 0 16px rgba(240,168,32,0.1)}.va-bot-text{flex:1}.va-bot-text p{color:#d0c8b8;font-size:15px;line-height:1.85;margin-bottom:12px;text-align:justify;font-family:'Sora',sans-serif}.va-bot-text h1,.va-bot-text h2,.va-bot-text h3{color:#f0ebe0;font-weight:700;font-size:16px;margin:16px 0 8px;font-family:'Sora',sans-serif}.va-bot-text strong{color:#f0ebe0;font-weight:600}.va-bot-text em{color:#c8c0b0;font-style:italic}.va-bot-text ul{margin:8px 0 12px 20px}.va-bot-text li{color:#d0c8b8;font-size:15px;line-height:1.8;margin-bottom:5px;font-family:'Sora',sans-serif}.va-bot-text hr{border:none;border-top:1px solid #1e1e1e;margin:12px 0}.va-source{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid #141414;align-items:center}.va-slabel{font-family:'DM Mono',monospace;font-size:10px;color:#303030;letter-spacing:2px;text-transform:uppercase}.va-schip{font-family:'DM Mono',monospace;font-size:11px;color:#f0a820;background:rgba(240,168,32,0.08);border:1px solid rgba(240,168,32,0.2);border-radius:6px;padding:3px 10px}.va-divider{border:none;border-top:1px solid #111;margin:16px 0}div[data-testid="column"] .stButton>button{background:transparent !important;color:#505050 !important;border:1px solid #1c1c1c !important;border-radius:100px !important;font-size:12px !important;font-weight:500 !important;padding:8px 14px !important;box-shadow:none !important;transform:none !important}div[data-testid="column"] .stButton>button:hover{border-color:rgba(240,168,32,0.4) !important;color:#f0a820 !important;background:rgba(240,168,32,0.05) !important;transform:none !important}
 </style>
 """, unsafe_allow_html=True)
 
-# --- Backend ---
 @st.cache_resource
 def baglanti():
-    return lancedb.connect("./veritabani"), Anthropic()
+    client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+    if not PINECONE_AVAILABLE:
+        return None, client, 0
+    pinecone_key = os.getenv("PINECONE_API_KEY")
+    if not pinecone_key:
+        return None, client, 0
+    try:
+        pc = Pinecone(api_key=pinecone_key)
+        index_name = "vergiai"
+        if index_name not in [idx.name for idx in pc.list_indexes()]:
+            pc.create_index(name=index_name, dimension=384, metric="cosine", spec=ServerlessSpec(cloud="aws", region="us-east-1"))
+        index = pc.Index(index_name)
+        stats = index.describe_index_stats()
+        count = stats.get('total_vector_count', 0)
+        return index, client, count
+    except:
+        return None, client, 0
 
-db, client = baglanti()
-
-def tablo_var_mi():
-    try: return "vergi_belgeleri" in str(db.list_tables())
-    except: return False
-
-def belge_say():
-    if not tablo_var_mi(): return 0
-    try: return len(db.open_table("vergi_belgeleri").to_pandas())
-    except: return 0
+index, client, belge_sayisi = baglanti()
 
 def ara(soru, n=5):
-    if not tablo_var_mi(): return [], []
+    if not index or belge_sayisi == 0:
+        return [], []
     try:
-        df = db.open_table("vergi_belgeleri").to_pandas()
-        if df.empty: return [], []
-        kelimeler = [k.lower() for k in soru.split() if len(k) > 2]
-        df["puan"] = df["metin"].apply(lambda m: sum(1 for k in kelimeler if k in m.lower()))
-        df = df[df["puan"] > 0].sort_values("puan", ascending=False).head(n)
-        if df.empty: return [], []
-        return df["metin"].tolist(), [{"belge": r["belge"], "sayfa": r["sayfa"]} for _, r in df.iterrows()]
-    except: return [], []
+        from sentence_transformers import SentenceTransformer
+        model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+        query_vec = model.encode(soru).tolist()
+        results = index.query(vector=query_vec, top_k=n, include_metadata=True)
+        parcalar, kaynaklar = [], []
+        for match in results.matches:
+            if match.score > 0.3:
+                meta = match.metadata
+                parcalar.append(meta.get('metin', ''))
+                kaynaklar.append({'belge': meta.get('belge', ''), 'sayfa': meta.get('sayfa', 1)})
+        return parcalar, kaynaklar
+    except:
+        return [], []
 
 def cevap_al(soru, gecmis):
     parcalar, kaynaklar = ara(soru)
@@ -219,61 +91,33 @@ def cevap_al(soru, gecmis):
     else:
         sistem = "Sen vergiai.com Turk vergi mevzuati uzman asistanisin. Sorulari Turkce yanitla."
     msgs = gecmis + [{"role": "user", "content": soru}]
-    # Streaming
     tam_cevap = ""
     with client.messages.stream(model="claude-haiku-4-5-20251001", max_tokens=2048, system=sistem, messages=msgs) as stream:
-        for metin in stream.text_stream:
-            tam_cevap += metin
+        for text in stream.text_stream:
+            tam_cevap += text
             yield tam_cevap, kaynaklar
 
 for k, v in [("gecmis", []), ("mesajlar", []), ("ornek", "")]:
     if k not in st.session_state: st.session_state[k] = v
 
-parca = belge_say()
+st.markdown(f'<div class="va-topbar"><div class="va-logo">vergi<span class="va-logo-ai">AI</span></div><div class="va-badge"><span class="va-pdot"></span>{belge_sayisi:,} BELGE</div></div>', unsafe_allow_html=True)
 
-# TOPBAR
-st.markdown(f"""
-<div class="va-topbar">
-    <div class="va-logo">vergi<span class="va-logo-ai">AI</span></div>
-    <div class="va-badge"><span class="va-pdot"></span>{parca:,} BELGE</div>
-</div>
-""", unsafe_allow_html=True)
-
-# HERO
 if not st.session_state.mesajlar:
-    st.markdown("""
-    <div class="va-hero">
-        <div class="va-eyebrow">Türk Vergi Mevzuatı · Yapay Zeka Asistanı</div>
-        <div class="va-title"><span class="va-title-vergi">vergi</span><span class="va-title-ai">AI</span></div>
-        <div class="va-sub">Vergi kanunlarını saniyeler içinde öğrenin — kaynakları ile birlikte.</div>
-        <div class="va-chips">
-            <div class="va-chip">🔍 Anlık mevzuat araması</div>
-            <div class="va-chip">📋 Kaynak alıntısı</div>
-            <div class="va-chip">⚡ Claude AI destekli</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="va-hero"><div class="va-eyebrow">Türk Vergi Mevzuatı · Yapay Zeka Asistanı</div><div class="va-title"><span class="va-title-vergi">vergi</span><span class="va-title-ai">AI</span></div><div class="va-sub">Vergi kanunlarını saniyeler içinde öğrenin — kaynakları ile birlikte.</div><div class="va-chips"><div class="va-chip">🔍 Anlık mevzuat araması</div><div class="va-chip">📋 Kaynak alıntısı</div><div class="va-chip">⚡ Claude AI destekli</div></div></div>', unsafe_allow_html=True)
 
-# MESAJLAR
 if st.session_state.mesajlar:
     for m in st.session_state.mesajlar:
         if m["rol"] == "kullanici":
             st.markdown(f'<div class="va-msg-user"><div class="va-bubble-user">{m["icerik"]}</div></div>', unsafe_allow_html=True)
         else:
-            # Python'da markdown -> HTML cevirimi yapiyoruz, Streamlit'ten bagimsiz
             html_icerik = md_to_html(m["icerik"])
             kaynak_html = ""
             if m.get("kaynak"):
                 chips = "".join(f'<span class="va-schip">{k}</span>' for k in m["kaynak"].split(" · ") if k)
                 kaynak_html = f'<div class="va-source"><span class="va-slabel">KAYNAK</span>{chips}</div>'
-            st.markdown(f'''
-            <div class="va-msg-bot">
-                <div class="va-avatar">⚖</div>
-                <div class="va-bot-text">{html_icerik}{kaynak_html}</div>
-            </div>''', unsafe_allow_html=True)
+            st.markdown(f'<div class="va-msg-bot"><div class="va-avatar">⚖</div><div class="va-bot-text">{html_icerik}{kaynak_html}</div></div>', unsafe_allow_html=True)
     st.markdown('<hr class="va-divider">', unsafe_allow_html=True)
 
-# INPUT
 varsayilan = st.session_state.ornek
 st.session_state.ornek = ""
 
@@ -286,27 +130,19 @@ with st.form("chat", clear_on_submit=True):
 
 if gonder and soru.strip():
     st.session_state.mesajlar.append({"rol": "kullanici", "icerik": soru})
-    # Streaming kutusu - dogrudan HTML ile, ayni stil
     stream_kutu = st.empty()
     son_cevap = ""
     son_kaynaklar = []
-    for anlik_cevap, kaynaklar in cevap_al(soru, st.session_state.gecmis):
-        son_cevap = anlik_cevap
+    for anlik, kaynaklar in cevap_al(soru, st.session_state.gecmis):
+        son_cevap = anlik
         son_kaynaklar = kaynaklar
-        # Her adimda md_to_html ile ayni renk/stil
-        html_anlik = md_to_html(anlik_cevap)
-        stream_kutu.markdown(f'''
-        <div class="va-msg-bot">
-            <div class="va-avatar">⚖</div>
-            <div class="va-bot-text">{html_anlik}</div>
-        </div>''', unsafe_allow_html=True)
-    # Bitti - session'a kaydet ve yenile
+        html_anlik = md_to_html(son_cevap)
+        stream_kutu.markdown(f'<div class="va-msg-bot"><div class="va-avatar">⚖</div><div class="va-bot-text">{html_anlik}</div></div>', unsafe_allow_html=True)
     st.session_state.gecmis += [{"role":"user","content":soru}, {"role":"assistant","content":son_cevap}]
     kaynak_str = " · ".join(set(f"{k['belge']} S.{k['sayfa']}" for k in son_kaynaklar)) if son_kaynaklar else ""
     st.session_state.mesajlar.append({"rol": "bot", "icerik": son_cevap, "kaynak": kaynak_str})
     st.rerun()
 
-# ÖRNEK SORULAR
 if not st.session_state.mesajlar:
     st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
@@ -317,7 +153,6 @@ if not st.session_state.mesajlar:
                 st.session_state.ornek = ornek
                 st.rerun()
 
-# TEMİZLE
 if st.session_state.mesajlar:
     st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
     _, c = st.columns([5,1])
