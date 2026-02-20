@@ -45,8 +45,8 @@ st.markdown("""
 # ✅ DÜZELTİLDİ: Embedding modeli artık sadece 1 kez yükleniyor
 @st.cache_resource(show_spinner="Model yükleniyor...")
 def get_embedding_model():
-    from sentence_transformers import SentenceTransformer
-    return SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+    from fastembed import TextEmbedding
+    return TextEmbedding(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 
 @st.cache_resource
 def baglanti():
@@ -78,7 +78,7 @@ def ara(soru, n=5):
         return [], []
     try:
         model = get_embedding_model()  # ✅ Cache'den geliyor, yeniden yüklenmiyor
-        query_vec = model.encode(soru).tolist()
+        query_vec = list(model.embed([soru]))[0].tolist()
         results = index.query(vector=query_vec, top_k=n, include_metadata=True)
         parcalar, kaynaklar = [], []
         for match in results.matches:
@@ -168,4 +168,3 @@ if st.session_state.mesajlar:
             st.session_state.gecmis = []
             st.session_state.mesajlar = []
             st.rerun()
-
