@@ -42,11 +42,17 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ✅ DÜZELTİLDİ: Embedding modeli artık sadece 1 kez yükleniyor
+@st.cache_resource(show_spinner="Model yükleniyor...")
+def get_embedding_model():
+    from sentence_transformers import SentenceTransformer
+    return SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+
 @st.cache_resource
 def baglanti():
-    # Streamlit secrets kullan
-    anthropic_key = st.secrets.get("ANTHROPIC_API_KEY")
-    pinecone_key = st.secrets.get("PINECONE_API_KEY")
+    import os
+    anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
+    pinecone_key = os.environ.get("PINECONE_API_KEY")
     
     client = Anthropic(api_key=anthropic_key)
     
@@ -71,8 +77,7 @@ def ara(soru, n=5):
     if not index or belge_sayisi == 0:
         return [], []
     try:
-        from sentence_transformers import SentenceTransformer
-        model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+        model = get_embedding_model()  # ✅ Cache'den geliyor, yeniden yüklenmiyor
         query_vec = model.encode(soru).tolist()
         results = index.query(vector=query_vec, top_k=n, include_metadata=True)
         parcalar, kaynaklar = [], []
@@ -163,3 +168,4 @@ if st.session_state.mesajlar:
             st.session_state.gecmis = []
             st.session_state.mesajlar = []
             st.rerun()
+
