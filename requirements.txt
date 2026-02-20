@@ -1,6 +1,4 @@
 anthropic
 streamlit
 pinecone
-pymupdf
-python-dotenv
-sentence-transformers
+fastembed
