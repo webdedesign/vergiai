@@ -1,81 +1,117 @@
 import os
-import fitz
+import voyageai
 from pinecone import Pinecone, ServerlessSpec
-from sentence_transformers import SentenceTransformer
+from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Pinecone baglantisi
-pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
-index_name = "vergiai"
+# API clients
+voyage_client = voyageai.Client(api_key=os.environ.get("VOYAGE_API_KEY"))
+pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
 
-# Index olustur
-if index_name not in [idx.name for idx in pc.list_indexes()]:
-    print(f"'{index_name}' index'i olusturuluyor...")
-    pc.create_index(
-        name=index_name,
-        dimension=384,
-        metric="cosine",
-        spec=ServerlessSpec(cloud="aws", region="us-east-1")
+# Pinecone index - voyage-multilingual-2 uses 1024 dimensions
+INDEX_NAME = "vergiai"
+DIMENSION = 1024
+
+# Delete old index and create new one with correct dimensions
+existing = [idx.name for idx in pc.list_indexes()]
+if INDEX_NAME in existing:
+    print(f"Eski index siliniyor: {INDEX_NAME}")
+    pc.delete_index(INDEX_NAME)
+
+print(f"Yeni index oluşturuluyor: {INDEX_NAME} (dim={DIMENSION})")
+pc.create_index(
+    name=INDEX_NAME,
+    dimension=DIMENSION,
+    metric="cosine",
+    spec=ServerlessSpec(cloud="aws", region="us-east-1")
+)
+index = pc.Index(INDEX_NAME)
+
+def pdf_oku(pdf_yolu):
+    """PDF dosyasını oku ve metni çıkar"""
+    try:
+        import pymupdf
+        doc = pymupdf.open(pdf_yolu)
+        parcalar = []
+        for sayfa_no, sayfa in enumerate(doc):
+            metin = sayfa.get_text()
+            if metin.strip():
+                # Her sayfayı chunk'lara böl (max 500 karakter)
+                kelimeler = metin.split()
+                chunk = []
+                for kelime in kelimeler:
+                    chunk.append(kelime)
+                    if len(" ".join(chunk)) > 500:
+                        parcalar.append({
+                            "metin": " ".join(chunk),
+                            "sayfa": sayfa_no + 1,
+                            "belge": Path(pdf_yolu).stem
+                        })
+                        chunk = []
+                if chunk:
+                    parcalar.append({
+                        "metin": " ".join(chunk),
+                        "sayfa": sayfa_no + 1,
+                        "belge": Path(pdf_yolu).stem
+                    })
+        return parcalar
+    except Exception as e:
+        print(f"Hata: {pdf_yolu} - {e}")
+        return []
+
+def voyage_embed(metinler):
+    """Voyage AI ile embedding oluştur"""
+    result = voyage_client.embed(
+        metinler,
+        model="voyage-multilingual-2",
+        input_type="document"
     )
-    print("Index olusturuldu!")
+    return result.embeddings
 
-index = pc.Index(index_name)
+# PDF'leri yükle
+belgeler_klasoru = Path("belgeler")
+pdf_dosyalari = list(belgeler_klasoru.glob("*.pdf"))
+print(f"{len(pdf_dosyalari)} PDF bulundu: {[p.name for p in pdf_dosyalari]}")
 
-# Embedding modeli
-print("Embedding modeli yukleniyor...")
-model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+tum_parcalar = []
+for pdf in pdf_dosyalari:
+    print(f"Okunuyor: {pdf.name}")
+    parcalar = pdf_oku(pdf)
+    tum_parcalar.extend(parcalar)
+    print(f"  → {len(parcalar)} parça")
 
-# PDF'leri yukle
-pdf_klasoru = "./belgeler"
-pdfler = [f for f in os.listdir(pdf_klasoru) if f.endswith('.pdf')]
+print(f"\nToplam {len(tum_parcalar)} parça, Pinecone'a yükleniyor...")
 
-print(f"\n{len(pdfler)} PDF bulundu, yukleniyor...\n")
-
-toplam = 0
-for pdf_adi in pdfler:
-    print(f"► {pdf_adi} isleniyor...")
-    yol = os.path.join(pdf_klasoru, pdf_adi)
-    doc = fitz.open(yol)
+# Batch olarak yükle (Voyage max 128 metin/istek)
+BATCH = 32
+yuklenen = 0
+for i in range(0, len(tum_parcalar), BATCH):
+    batch = tum_parcalar[i:i+BATCH]
+    metinler = [p["metin"] for p in batch]
     
-    vektorler = []
-    for sayfa_no in range(len(doc)):
-        metin = doc[sayfa_no].get_text()
-        if not metin.strip():
-            continue
-        
-        # 400 kelimelik parcalar
-        kelimeler = metin.split()
-        for i in range(0, len(kelimeler), 360):
-            parca = " ".join(kelimeler[i:i+400])
-            if not parca.strip():
-                continue
-            
-            # Embedding
-            vektor = model.encode(parca).tolist()
-            
-            # ID olustur
-            vektor_id = f"{pdf_adi}_{sayfa_no}_{i}"
-            
-            vektorler.append({
-                'id': vektor_id,
-                'values': vektor,
-                'metadata': {
-                    'belge': os.path.splitext(pdf_adi)[0],
-                    'sayfa': sayfa_no + 1,
-                    'metin': parca
+    import time
+    time.sleep(22)  # 3 RPM limit icin bekle (60/3 = 20sn, +2 guvenlik)
+    try:
+        embeddings = voyage_embed(metinler)
+        vectors = []
+        for j, (parca, emb) in enumerate(zip(batch, embeddings)):
+            vectors.append({
+                "id": f"doc_{i+j}",
+                "values": emb,
+                "metadata": {
+                    "metin": parca["metin"],
+                    "belge": parca["belge"],
+                    "sayfa": parca["sayfa"]
                 }
             })
-    
-    # Pinecone'a yukle (100'er grup halinde)
-    for j in range(0, len(vektorler), 100):
-        batch = vektorler[j:j+100]
-        index.upsert(vectors=batch)
-    
-    print(f"  ✓ {len(vektorler)} parca yuklendi")
-    toplam += len(vektorler)
+        index.upsert(vectors=vectors)
+        yuklenen += len(vectors)
+        print(f"  {yuklenen}/{len(tum_parcalar)} yüklendi")
+    except Exception as e:
+        print(f"Hata batch {i}: {e}")
 
-print(f"\n✓ TAMAM! Toplam {toplam} belge parcasi Pinecone'a yuklendi.")
-print(f"\nIndex durumu:")
-print(index.describe_index_stats())
+print(f"\n✅ Tamamlandı! {yuklenen} vektör Pinecone'a yüklendi.")
+stats = index.describe_index_stats()
+print(f"Pinecone'daki toplam vektör: {stats['total_vector_count']}")

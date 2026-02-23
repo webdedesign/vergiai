@@ -1,5 +1,6 @@
 import warnings
 warnings.filterwarnings("ignore")
+import os
 import streamlit as st
 from anthropic import Anthropic
 import re
@@ -9,6 +10,12 @@ try:
     PINECONE_AVAILABLE = True
 except:
     PINECONE_AVAILABLE = False
+
+try:
+    import voyageai
+    VOYAGE_AVAILABLE = True
+except:
+    VOYAGE_AVAILABLE = False
 
 st.set_page_config(page_title="vergiAI", page_icon="⚖", layout="centered", initial_sidebar_state="collapsed")
 
@@ -42,43 +49,38 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ✅ DÜZELTİLDİ: Embedding modeli artık sadece 1 kez yükleniyor
-@st.cache_resource(show_spinner="Model yükleniyor...")
-def get_embedding_model():
-    from fastembed import TextEmbedding
-    return TextEmbedding(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
-
 @st.cache_resource
 def baglanti():
-    import os
     anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
     pinecone_key = os.environ.get("PINECONE_API_KEY")
-    
+    voyage_key = os.environ.get("VOYAGE_API_KEY")
+
     client = Anthropic(api_key=anthropic_key)
-    
+    voyage = voyageai.Client(api_key=voyage_key) if VOYAGE_AVAILABLE and voyage_key else None
+
     if not PINECONE_AVAILABLE or not pinecone_key:
-        return None, client, 0
-    
+        return None, client, voyage, 0
+
     try:
         pc = Pinecone(api_key=pinecone_key)
         index_name = "vergiai"
         if index_name not in [idx.name for idx in pc.list_indexes()]:
-            pc.create_index(name=index_name, dimension=384, metric="cosine", spec=ServerlessSpec(cloud="aws", region="us-east-1"))
+            pc.create_index(name=index_name, dimension=1024, metric="cosine", spec=ServerlessSpec(cloud="aws", region="us-east-1"))
         index = pc.Index(index_name)
         stats = index.describe_index_stats()
         count = stats.get('total_vector_count', 0)
-        return index, client, count
+        return index, client, voyage, count
     except:
-        return None, client, 0
+        return None, client, voyage, 0
 
-index, client, belge_sayisi = baglanti()
+index, client, voyage, belge_sayisi = baglanti()
 
 def ara(soru, n=5):
-    if not index or belge_sayisi == 0:
+    if not index or not voyage or belge_sayisi == 0:
         return [], []
     try:
-        model = get_embedding_model()  # ✅ Cache'den geliyor, yeniden yüklenmiyor
-        query_vec = list(model.embed([soru]))[0].tolist()
+        result = voyage.embed([soru], model="voyage-multilingual-2", input_type="query")
+        query_vec = result.embeddings[0]
         results = index.query(vector=query_vec, top_k=n, include_metadata=True)
         parcalar, kaynaklar = [], []
         for match in results.matches:
