@@ -59,7 +59,7 @@ def baglanti():
     voyage = voyageai.Client(api_key=voyage_key) if VOYAGE_AVAILABLE and voyage_key else None
 
     if not PINECONE_AVAILABLE or not pinecone_key:
-        return None, client, voyage, 0
+        return None, client, voyage
 
     try:
         pc = Pinecone(api_key=pinecone_key)
@@ -67,13 +67,17 @@ def baglanti():
         if index_name not in [idx.name for idx in pc.list_indexes()]:
             pc.create_index(name=index_name, dimension=1024, metric="cosine", spec=ServerlessSpec(cloud="aws", region="us-east-1"))
         index = pc.Index(index_name)
-        stats = index.describe_index_stats()
-        count = stats.get('total_vector_count', 0)
-        return index, client, voyage, count
+        return index, client, voyage
     except:
-        return None, client, voyage, 0
+        return None, client, voyage
 
-index, client, voyage, belge_sayisi = baglanti()
+index, client, voyage = baglanti()
+
+# Vektor sayisini cache'lemeden canli cek
+try:
+    belge_sayisi = index.describe_index_stats().get('total_vector_count', 0) if index else 0
+except:
+    belge_sayisi = 0
 
 def ara(soru, n=5):
     if not index or not voyage or belge_sayisi == 0:
