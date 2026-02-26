@@ -106,10 +106,20 @@ def cevap_al(soru, gecmis):
             tam_cevap += text
             yield tam_cevap, kaynaklar
 
-for k, v in [("gecmis", []), ("mesajlar", []), ("ornek", "")]:
+for k, v in [("gecmis", []), ("mesajlar", [])]:
     if k not in st.session_state: st.session_state[k] = v
 
-st.markdown(f'<div class="va-topbar"><div class="va-logo">vergi<span class="va-logo-ai">AI</span></div><div class="va-badge"><span class="va-pdot"></span>{belge_sayisi:,} BELGE</div></div>', unsafe_allow_html=True)
+if st.session_state.mesajlar:
+    logo_html = f'''<div class="va-topbar">
+        <div class="va-logo" style="cursor:pointer" onclick="window.location.reload()" title="Ana Sayfaya Dön">vergi<span class="va-logo-ai">AI</span></div>
+        <div class="va-badge"><span class="va-pdot"></span>{belge_sayisi:,} BELGE</div>
+    </div>'''
+else:
+    logo_html = f'''<div class="va-topbar">
+        <div class="va-logo">vergi<span class="va-logo-ai">AI</span></div>
+        <div class="va-badge"><span class="va-pdot"></span>{belge_sayisi:,} BELGE</div>
+    </div>'''
+st.markdown(logo_html, unsafe_allow_html=True)
 
 if not st.session_state.mesajlar:
     st.markdown('<div class="va-hero"><div class="va-eyebrow">Türk Vergi Mevzuatı · Yapay Zeka Asistanı</div><div class="va-title"><span class="va-title-vergi">vergi</span><span class="va-title-ai">AI</span></div><div class="va-sub">Vergi kanunlarını saniyeler içinde öğrenin — kaynakları ile birlikte.</div><div class="va-chips"><div class="va-chip">🔍 Anlık mevzuat araması</div><div class="va-chip">📋 Kaynak alıntısı</div><div class="va-chip">⚡ Claude AI destekli</div></div></div>', unsafe_allow_html=True)
@@ -127,13 +137,10 @@ if st.session_state.mesajlar:
             st.markdown(f'<div class="va-msg-bot"><div class="va-avatar">⚖</div><div class="va-bot-text">{html_icerik}{kaynak_html}</div></div>', unsafe_allow_html=True)
     st.markdown('<hr class="va-divider">', unsafe_allow_html=True)
 
-varsayilan = st.session_state.ornek
-st.session_state.ornek = ""
-
 with st.form("chat", clear_on_submit=True):
     col1, col2 = st.columns([5, 1])
     with col1:
-        soru = st.text_input("soru", value=varsayilan, placeholder="Vergi mevzuatı hakkında sorunuzu yazın...", label_visibility="collapsed")
+        soru = st.text_input("soru", value="", placeholder="Vergi mevzuatı hakkında sorunuzu yazın...", label_visibility="collapsed")
     with col2:
         gonder = st.form_submit_button("↑ Gönder")
 
@@ -152,21 +159,13 @@ if gonder and soru.strip():
     st.session_state.mesajlar.append({"rol": "bot", "icerik": son_cevap, "kaynak": kaynak_str})
     st.rerun()
 
-if not st.session_state.mesajlar:
-    st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
-    c1, c2, c3, c4 = st.columns(4)
-    ornekler = ["KDV oranları nelerdir?", "İhracat istisnası nedir?", "Gelir vergisi dilimleri?", "Kurumlar vergisi oranı?"]
-    for col, ornek in zip([c1,c2,c3,c4], ornekler):
-        with col:
-            if st.button(ornek, key=ornek):
-                st.session_state.ornek = ornek
-                st.rerun()
+
 
 if st.session_state.mesajlar:
     st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
     _, c = st.columns([5,1])
     with c:
-        if st.button("✕ Sil", key="sil"):
+        if st.button("⌂ Ana Sayfa", key="anasayfa"):
             st.session_state.gecmis = []
             st.session_state.mesajlar = []
             st.rerun()
