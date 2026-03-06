@@ -73,7 +73,6 @@ def baglanti():
 
 index, client, voyage = baglanti()
 
-# Vektor sayisini cache'lemeden canli cek
 try:
     belge_sayisi = index.describe_index_stats().get('total_vector_count', 0) if index else 0
 except:
@@ -83,7 +82,7 @@ def ara(soru, n=5):
     if not index or not voyage or belge_sayisi == 0:
         return [], []
     try:
-        result = voyage.embed([soru], model="voyage-multilingual-2", input_type="query")
+        result = voyage.embed([soru], model="voyage-3", input_type="query")  # voyage-3 ile tutarli
         query_vec = result.embeddings[0]
         results = index.query(vector=query_vec, top_k=n, include_metadata=True)
         parcalar, kaynaklar = [], []
@@ -91,7 +90,7 @@ def ara(soru, n=5):
             if match.score > 0.3:
                 meta = match.metadata
                 parcalar.append(meta.get('metin', ''))
-                kaynaklar.append({'belge': meta.get('belge', ''), 'sayfa': meta.get('sayfa', 1)})
+                kaynaklar.append({'belge': meta.get('kaynak', meta.get('belge', '')), 'sayfa': meta.get('sayfa', 1)})
         return parcalar, kaynaklar
     except:
         return [], []
@@ -156,8 +155,6 @@ if gonder and soru.strip():
     kaynak_str = " · ".join(set(f"{k['belge']} S.{k['sayfa']}" for k in son_kaynaklar)) if son_kaynaklar else ""
     st.session_state.mesajlar.append({"rol": "bot", "icerik": son_cevap, "kaynak": kaynak_str})
     st.rerun()
-
-
 
 if st.session_state.mesajlar:
     st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
