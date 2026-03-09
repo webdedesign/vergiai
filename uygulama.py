@@ -79,21 +79,28 @@ except:
     belge_sayisi = 0
 
 def ara(soru, n=5):
+    print(f"[ARA] Cagrildi. index={index is not None}, voyage={voyage is not None}, belge_sayisi={belge_sayisi}")
     if not index or not voyage or belge_sayisi == 0:
+        print("[ARA] Erken cikis!")
         return [], []
     try:
-        result = voyage.embed([soru], model="voyage-3", input_type="query")  # voyage-3 ile tutarli
+        result = voyage.embed([soru], model="voyage-3", input_type="query")
+        print(f"[ARA] Embedding boyutu: {len(result.embeddings[0])}")
         query_vec = result.embeddings[0]
         results = index.query(vector=query_vec, top_k=n, include_metadata=True)
+        print(f"[ARA] Pinecone sonuc sayisi: {len(results.matches)}")
         parcalar, kaynaklar = [], []
         for match in results.matches:
+            meta = match.metadata
+            kaynak = meta.get('kaynak', meta.get('belge', '?'))
+            print(f"[ARA] Skor: {match.score:.4f} | Kaynak: {kaynak}")
             if match.score > 0.3:
-                meta = match.metadata
                 parcalar.append(meta.get('metin', ''))
-                kaynaklar.append({'belge': meta.get('kaynak', meta.get('belge', '')), 'sayfa': meta.get('sayfa', 1)})
+                kaynaklar.append({'belge': kaynak, 'sayfa': meta.get('sayfa', 1)})
+        print(f"[ARA] Donen parca sayisi: {len(parcalar)}")
         return parcalar, kaynaklar
     except Exception as e:
-        print(f"ARA HATASI: {e}")
+        print(f"[ARA] HATA: {e}")
         return [], []
 
 def cevap_al(soru, gecmis):
