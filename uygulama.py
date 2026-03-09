@@ -79,28 +79,24 @@ except:
     belge_sayisi = 0
 
 def ara(soru, n=5):
-    print(f"[ARA] Cagrildi. index={index is not None}, voyage={voyage is not None}, belge_sayisi={belge_sayisi}")
     if not index or not voyage or belge_sayisi == 0:
-        print("[ARA] Erken cikis!")
         return [], []
     try:
         result = voyage.embed([soru], model="voyage-3", input_type="query")
-        print(f"[ARA] Embedding boyutu: {len(result.embeddings[0])}")
         query_vec = result.embeddings[0]
         results = index.query(vector=query_vec, top_k=n, include_metadata=True)
-        print(f"[ARA] Pinecone sonuc sayisi: {len(results.matches)}")
-        parcalar, kaynaklar = [], []
+        parcalar, kaynaklar, debug = [], [], []
         for match in results.matches:
             meta = match.metadata
-            kaynak = meta.get('kaynak', meta.get('belge', '?'))
-            print(f"[ARA] Skor: {match.score:.4f} | Kaynak: {kaynak}")
+            kaynak = meta.get("kaynak", meta.get("belge", "?"))
+            debug.append(f"{match.score:.3f}|{kaynak}")
             if match.score > 0.3:
-                parcalar.append(meta.get('metin', ''))
-                kaynaklar.append({'belge': kaynak, 'sayfa': meta.get('sayfa', 1)})
-        print(f"[ARA] Donen parca sayisi: {len(parcalar)}")
+                parcalar.append(meta.get("metin", ""))
+                kaynaklar.append({"belge": kaynak, "sayfa": meta.get("sayfa", 1)})
+        st.caption("DEBUG: " + " / ".join(debug[:5]))
         return parcalar, kaynaklar
     except Exception as e:
-        print(f"[ARA] HATA: {e}")
+        st.caption(f"HATA: {e}")
         return [], []
 
 def cevap_al(soru, gecmis):
@@ -122,7 +118,7 @@ for k, v in [("gecmis", []), ("mesajlar", [])]:
 
 logo_html = f'''<div class="va-topbar">
     <div class="va-logo" style="cursor:pointer" onclick="window.location.reload()" title="Ana Sayfaya Dön">vergi<span class="va-logo-ai">AI</span></div>
-    <div class="va-badge"><span class="va-pdot"></span>{belge_sayisi:,} BELGE</div>
+    <div class="va-badge"><span class="va-pdot"></span>{belge_sayisi:,} BELGE · v3</div>
 </div>'''
 st.markdown(logo_html, unsafe_allow_html=True)
 
