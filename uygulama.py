@@ -92,7 +92,8 @@ def ara(soru, n=5):
                 parcalar.append(meta.get('metin', ''))
                 kaynaklar.append({'belge': meta.get('kaynak', meta.get('belge', '')), 'sayfa': meta.get('sayfa', 1)})
         return parcalar, kaynaklar
-    except:
+    except Exception as e:
+        print(f"ARA HATASI: {e}")
         return [], []
 
 def cevap_al(soru, gecmis):
