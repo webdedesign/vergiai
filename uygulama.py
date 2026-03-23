@@ -118,7 +118,7 @@ for k, v in [("gecmis", []), ("mesajlar", [])]:
 
 logo_html = f'''<div class="va-topbar">
     <div class="va-logo" style="cursor:pointer" onclick="window.location.reload()" title="Ana Sayfaya Dön">vergi<span class="va-logo-ai">AI</span></div>
-    <div class="va-badge"><span class="va-pdot"></span>{belge_sayisi:,} · {"V3-OK" if voyage else "VOYAGE-NONE"}</div>
+    <div class="va-badge"><span class="va-pdot"></span>{belge_sayisi:,} | {"V3-OK" if voyage else "VOYAGE-NONE"}</div>
 </div>'''
 st.markdown(logo_html, unsafe_allow_html=True)
 
