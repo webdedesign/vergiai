@@ -49,7 +49,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-@st.cache_resource
 def baglanti():
     anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
     pinecone_key = os.environ.get("PINECONE_API_KEY")
@@ -85,7 +84,7 @@ def ara(soru, n=5):
         result = voyage.embed([soru], model="voyage-3", input_type="query")
         query_vec = result.embeddings[0]
         results = index.query(vector=query_vec, top_k=n, include_metadata=True)
-        parcalar, kaynaklar, debug = [], [], []
+        parcalar, kaynaklar = [], []
         for match in results.matches:
             meta = match.metadata
             kaynak = meta.get("kaynak", meta.get("belge", "?"))
@@ -93,22 +92,21 @@ def ara(soru, n=5):
             if match.score > 0.3:
                 parcalar.append(meta.get("metin", ""))
                 kaynaklar.append({"belge": kaynak, "sayfa": meta.get("sayfa", 1)})
-        st.caption("DEBUG: " + " / ".join(debug[:5]))
         return parcalar, kaynaklar
     except Exception as e:
-        st.caption(f"HATA: {e}")
         return [], []
 
 def cevap_al(soru, gecmis):
     parcalar, kaynaklar = ara(soru)
     if parcalar:
         icerik = "\n".join(f"[{k['belge']} - Sayfa {k['sayfa']}]\n{p}" for p, k in zip(parcalar, kaynaklar))
-        sistem = f"Sen vergiai.com Turk vergi mevzuati uzman asistanisin. Su belge bolumlerini kullanarak soruyu Turkce yanitla, kaynagi belirt.\nBELGELER:\n{icerik}"
+        sistem = f"Sen vergiai.com Turk vergi mevzuati uzman asistanisin. Asagidaki belge parcalarini VE web aramasi yaparak soruyu Turkce yanitla, kaynagi belirt.\nBELGELER:\n{icerik}"
     else:
-        sistem = "Sen vergiai.com Turk vergi mevzuati uzman asistanisin. Sorulari Turkce yanitla."
+        sistem = "Sen vergiai.com Turk vergi mevzuati uzman asistanisin. Web aramasi yaparak soruyu guncel Turk vergi mevzuatina gore Turkce yanitla, kaynagi belirt."
     msgs = gecmis + [{"role": "user", "content": soru}]
+    tools = [{"type": "web_search_20250305", "name": "web_search"}]
     tam_cevap = ""
-    with client.messages.stream(model="claude-haiku-4-5-20251001", max_tokens=2048, system=sistem, messages=msgs) as stream:
+    with client.messages.stream(model="claude-haiku-4-5-20251001", max_tokens=2048, system=sistem, messages=msgs, tools=tools) as stream:
         for text in stream.text_stream:
             tam_cevap += text
             yield tam_cevap, kaynaklar
@@ -118,7 +116,7 @@ for k, v in [("gecmis", []), ("mesajlar", [])]:
 
 logo_html = f'''<div class="va-topbar">
     <div class="va-logo" style="cursor:pointer" onclick="window.location.reload()" title="Ana Sayfaya Dön">vergi<span class="va-logo-ai">AI</span></div>
-    <div class="va-badge"><span class="va-pdot"></span>{belge_sayisi:,} | {"V3-OK" if voyage else "VOYAGE-NONE"}</div>
+    <div class="va-badge"><span class="va-pdot"></span>{belge_sayisi:,} BELGE</div>
 </div>'''
 st.markdown(logo_html, unsafe_allow_html=True)
 
