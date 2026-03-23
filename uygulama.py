@@ -100,11 +100,20 @@ def cevap_al(soru, gecmis):
     parcalar, kaynaklar = ara(soru)
     if parcalar:
         icerik = "\n".join(f"[{k['belge']} - Sayfa {k['sayfa']}]\n{p}" for p, k in zip(parcalar, kaynaklar))
-        sistem = f"Sen vergiai.com Turk vergi mevzuati uzman asistanisin. Asagidaki belge parcalarini VE web aramasi yaparak soruyu Turkce yanitla, kaynagi belirt.\nBELGELER:\n{icerik}"
+        sistem = (
+            "Sen vergiai.com Turk vergi mevzuati uzman asistanisin. "
+            "Oncelikle asagidaki belge parcalarini kullanarak soruyu Turkce yanitla. "
+            "Eger belgeler soruyu tam karsilamazsa, web aramasi yaparak eksik bilgiyi tamamla. "
+            "Kaynagi her zaman belirt.\nBELGELER:\n" + icerik
+        )
+        tools = [{"type": "web_search_20250305", "name": "web_search"}]
     else:
-        sistem = "Sen vergiai.com Turk vergi mevzuati uzman asistanisin. Web aramasi yaparak soruyu guncel Turk vergi mevzuatina gore Turkce yanitla, kaynagi belirt."
+        sistem = (
+            "Sen vergiai.com Turk vergi mevzuati uzman asistanisin. "
+            "Web aramasi yaparak soruyu guncel Turk vergi mevzuatina gore Turkce yanitla, kaynagi belirt."
+        )
+        tools = [{"type": "web_search_20250305", "name": "web_search"}]
     msgs = gecmis + [{"role": "user", "content": soru}]
-    tools = [{"type": "web_search_20250305", "name": "web_search"}]
     tam_cevap = ""
     with client.messages.stream(model="claude-haiku-4-5-20251001", max_tokens=2048, system=sistem, messages=msgs, tools=tools) as stream:
         for text in stream.text_stream:
