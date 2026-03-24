@@ -44,8 +44,201 @@ def md_to_html(text):
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
-*,*::before,*::after{box-sizing:border-box}html,body,.stApp{background:#050505 !important;font-family:'Sora',sans-serif !important}.main .block-container{padding:2rem 1.5rem 4rem !important;max-width:780px !important}header[data-testid="stHeader"],footer,section[data-testid="stSidebar"]{display:none !important}.stApp::after{content:'';position:fixed;width:600px;height:600px;background:radial-gradient(circle,rgba(240,168,32,0.08) 0%,transparent 70%);top:-200px;right:-100px;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}.va-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:0;position:relative;z-index:10}.va-logo{font-weight:800;font-size:20px;letter-spacing:-0.5px;color:#f5f0e8}.va-logo-ai{color:#ffc040;text-shadow:0 0 20px rgba(255,192,64,0.4)}.va-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(240,168,32,0.08);border:1px solid rgba(240,168,32,0.2);border-radius:100px;padding:5px 14px;font-family:'DM Mono',monospace;font-size:11px;color:#f0a820;letter-spacing:1px}.va-pdot{display:inline-block;width:6px;height:6px;background:#ffc040;border-radius:50%;box-shadow:0 0 8px #ffc040;animation:blink 2s ease-in-out infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}.va-hero{text-align:center;padding:48px 0 40px;position:relative;z-index:10}.va-eyebrow{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:4px;color:#f0a820;text-transform:uppercase;margin-bottom:16px;opacity:0.9}.va-title{font-weight:800;font-size:clamp(52px,10vw,88px);line-height:0.92;letter-spacing:-4px;margin-bottom:14px}.va-title-vergi{background:linear-gradient(135deg,#f5f0e8 0%,#c8b898 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}.va-title-ai{background:linear-gradient(135deg,#ffc040 0%,#e09010 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 30px rgba(255,192,64,0.3))}.va-sub{font-size:16px;font-weight:400;color:#707070;margin-bottom:24px}.va-chips{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.va-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:100px;padding:7px 16px;font-size:13px;font-weight:500;color:#606060}.stTextInput>div>div>input{background:#101010 !important;border:1.5px solid #282828 !important;border-radius:14px !important;color:#f0ebe0 !important;font-family:'Sora',sans-serif !important;font-size:16px !important;padding:16px 20px !important;caret-color:#ffc040 !important;box-shadow:0 4px 24px rgba(0,0,0,0.4) !important}.stTextInput>div>div>input:focus{border-color:rgba(240,168,32,0.6) !important;box-shadow:0 0 0 3px rgba(240,168,32,0.08) !important}.stTextInput>div>div>input::placeholder{color:#404040 !important}.stTextInput label{display:none !important}.stButton>button{background:linear-gradient(135deg,#ffc040,#e09010) !important;color:#000 !important;border:none !important;border-radius:14px !important;font-family:'Sora',sans-serif !important;font-size:16px !important;font-weight:700 !important;padding:16px 28px !important;width:100% !important;box-shadow:0 4px 20px rgba(240,168,32,0.3) !important}.stButton>button:hover{transform:translateY(-1px) !important;box-shadow:0 6px 28px rgba(240,168,32,0.45) !important}.va-msg-user{display:flex;justify-content:flex-end;margin:12px 0}.va-bubble-user{background:#141414;border:1px solid rgba(255,255,255,0.09);border-radius:16px 16px 4px 16px;padding:14px 20px;font-size:16px;color:#e8e0d0;max-width:75%;line-height:1.65}.va-msg-bot{display:flex;gap:14px;margin:14px 0;align-items:flex-start}.va-avatar{width:32px;height:32px;flex-shrink:0;background:linear-gradient(135deg,#141414,#1f1f1f);border:1px solid#282828;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-top:3px;box-shadow:0 0 16px rgba(240,168,32,0.1)}.va-bot-text{flex:1}.va-bot-text p{color:#e8e2d8;font-size:15px;line-height:1.85;margin-bottom:12px;text-align:justify;font-family:'Sora',sans-serif}.va-bot-text h1,.va-bot-text h2,.va-bot-text h3{color:#f0ebe0;font-weight:700;font-size:16px;margin:16px 0 8px;font-family:'Sora',sans-serif}.va-bot-text strong{color:#f0ebe0;font-weight:600}.va-bot-text em{color:#d0c8b8;font-style:italic}.va-bot-text ul{margin:8px 0 12px 20px}.va-bot-text li{color:#e8e2d8;font-size:15px;line-height:1.8;margin-bottom:5px;font-family:'Sora',sans-serif}.va-bot-text hr{border:none;border-top:1px solid #1e1e1e;margin:12px 0}.va-source{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid #141414;align-items:center}.va-slabel{font-family:'DM Mono',monospace;font-size:10px;color:#303030;letter-spacing:2px;text-transform:uppercase}.va-schip{font-family:'DM Mono',monospace;font-size:11px;color:#f0a820;background:rgba(240,168,32,0.08);border:1px solid rgba(240,168,32,0.2);border-radius:6px;padding:3px 10px}.va-divider{border:none;border-top:1px solid #111;margin:16px 0}div[data-testid="column"] .stButton>button{background:transparent !important;color:#505050 !important;border:1px solid #1c1c1c !important;border-radius:100px !important;font-size:12px !important;font-weight:500 !important;padding:8px 14px !important;box-shadow:none !important;transform:none !important}div[data-testid="column"] .stButton>button:hover{border-color:rgba(240,168,32,0.4) !important;color:#f0a820 !important;background:rgba(240,168,32,0.05) !important;transform:none !important}
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*,*::before,*::after{box-sizing:border-box}
+
+html,body,.stApp{
+  background:#0a0a0f !important;
+  font-family:'Plus Jakarta Sans',sans-serif !important;
+}
+
+.main .block-container{
+  padding:2rem 1.5rem 5rem !important;
+  max-width:760px !important;
+}
+
+header[data-testid="stHeader"],footer,section[data-testid="stSidebar"]{display:none !important}
+
+/* Ambient glow blobs */
+.stApp::before{
+  content:'';position:fixed;width:500px;height:500px;
+  background:radial-gradient(circle,rgba(138,43,226,0.12) 0%,transparent 70%);
+  top:-150px;right:-100px;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;
+}
+.stApp::after{
+  content:'';position:fixed;width:400px;height:400px;
+  background:radial-gradient(circle,rgba(255,165,0,0.07) 0%,transparent 70%);
+  bottom:-100px;left:-100px;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;
+}
+
+/* Logo button */
+.va-logo-btn button{
+  background:transparent !important;border:none !important;padding:0 !important;
+  box-shadow:none !important;font-weight:800 !important;font-size:18px !important;
+  letter-spacing:-0.5px !important;color:#f0ebe0 !important;
+  font-family:'Plus Jakarta Sans',sans-serif !important;width:auto !important;
+  text-transform:none !important;
+}
+.va-logo-btn button:hover{
+  transform:none !important;background:transparent !important;
+  box-shadow:none !important;color:#ffc040 !important;
+}
+.va-logo-ai-span{
+  background:linear-gradient(135deg,#ffc040,#ff8c00);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+
+/* Badge */
+.va-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:100px;padding:5px 14px;
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:#888;letter-spacing:1px;
+}
+.va-pdot{
+  display:inline-block;width:5px;height:5px;
+  background:#7c3aed;border-radius:50%;
+  box-shadow:0 0 8px #7c3aed;
+  animation:blink 2s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+
+/* Hero */
+.va-hero{text-align:center;padding:52px 0 44px;position:relative;z-index:10}
+.va-eyebrow{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  letter-spacing:4px;color:#7c3aed;text-transform:uppercase;
+  margin-bottom:20px;opacity:0.9;
+}
+.va-title{
+  font-weight:800;font-size:clamp(48px,9vw,82px);
+  line-height:0.95;letter-spacing:-3px;margin-bottom:16px;
+}
+.va-title-vergi{
+  background:linear-gradient(135deg,#f0ebe0 0%,#a89880 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.va-title-ai{
+  background:linear-gradient(135deg,#a855f7 0%,#ec4899 60%,#ffc040 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 40px rgba(168,85,247,0.4));
+}
+.va-sub{font-size:15px;font-weight:400;color:#555;margin-bottom:28px;line-height:1.6}
+.va-chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.va-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:100px;padding:6px 14px;
+  font-size:12px;font-weight:500;color:#555;
+}
+
+/* Input */
+.stTextInput>div>div>input{
+  background:rgba(255,255,255,0.04) !important;
+  border:1.5px solid rgba(255,255,255,0.08) !important;
+  border-radius:16px !important;color:#f0ebe0 !important;
+  font-family:'Plus Jakarta Sans',sans-serif !important;
+  font-size:15px !important;padding:16px 20px !important;
+  caret-color:#a855f7 !important;
+  box-shadow:none !important;
+  transition:border-color 0.2s,box-shadow 0.2s;
+}
+.stTextInput>div>div>input:focus{
+  border-color:rgba(168,85,247,0.5) !important;
+  box-shadow:0 0 0 3px rgba(168,85,247,0.08) !important;
+  background:rgba(255,255,255,0.06) !important;
+}
+.stTextInput>div>div>input::placeholder{color:#333 !important}
+.stTextInput label{display:none !important}
+
+/* Send button */
+.stButton>button{
+  background:linear-gradient(135deg,#7c3aed,#a855f7) !important;
+  color:#fff !important;border:none !important;border-radius:14px !important;
+  font-family:'Plus Jakarta Sans',sans-serif !important;
+  font-size:15px !important;font-weight:700 !important;
+  padding:16px 24px !important;width:100% !important;
+  box-shadow:0 4px 20px rgba(124,58,237,0.35) !important;
+  transition:all 0.2s !important;
+}
+.stButton>button:hover{
+  transform:translateY(-1px) !important;
+  box-shadow:0 6px 28px rgba(124,58,237,0.5) !important;
+}
+
+/* User message */
+.va-msg-user{display:flex;justify-content:flex-end;margin:10px 0}
+.va-bubble-user{
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  border-radius:18px 18px 4px 18px;
+  padding:14px 18px;font-size:14px;color:#fff;
+  max-width:72%;line-height:1.65;
+  box-shadow:0 4px 20px rgba(124,58,237,0.3);
+}
+
+/* Bot message */
+.va-msg-bot{display:flex;gap:12px;margin:12px 0;align-items:flex-start}
+.va-avatar{
+  width:30px;height:30px;flex-shrink:0;
+  background:linear-gradient(135deg,#1a1a2e,#16213e);
+  border:1px solid rgba(168,85,247,0.2);
+  border-radius:10px;display:flex;align-items:center;
+  justify-content:center;font-size:14px;margin-top:2px;
+  box-shadow:0 0 16px rgba(168,85,247,0.15);
+}
+.va-bot-card{
+  flex:1;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:4px 18px 18px 18px;
+  padding:16px 18px;
+}
+.va-bot-card p{color:#e0dbd0;font-size:14px;line-height:1.85;margin-bottom:10px;text-align:justify;font-family:'Plus Jakarta Sans',sans-serif}
+.va-bot-card h1,.va-bot-card h2,.va-bot-card h3{color:#f0ebe0;font-weight:700;font-size:15px;margin:14px 0 8px;font-family:'Plus Jakarta Sans',sans-serif}
+.va-bot-card strong{color:#f0ebe0;font-weight:600}
+.va-bot-card em{color:#e0dbd0;font-style:italic}
+.va-bot-card ul{margin:6px 0 10px 18px}
+.va-bot-card li{color:#e0dbd0;font-size:14px;line-height:1.8;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif}
+.va-bot-card hr{border:none;border-top:1px solid rgba(255,255,255,0.06);margin:10px 0}
+
+/* Source chips */
+.va-source{
+  display:flex;flex-wrap:wrap;gap:5px;
+  margin-top:12px;padding-top:10px;
+  border-top:1px solid rgba(255,255,255,0.05);
+  align-items:center;
+}
+.va-slabel{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  color:#333;letter-spacing:2px;text-transform:uppercase;
+}
+.va-schip{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:#a855f7;background:rgba(168,85,247,0.08);
+  border:1px solid rgba(168,85,247,0.2);
+  border-radius:6px;padding:2px 8px;
+}
+
+.va-divider{border:none;border-top:1px solid rgba(255,255,255,0.05);margin:14px 0}
+
+/* Column buttons (ana sayfa) */
+div[data-testid="column"] .stButton>button{
+  background:transparent !important;color:#444 !important;
+  border:1px solid rgba(255,255,255,0.06) !important;
+  border-radius:100px !important;font-size:12px !important;
+  font-weight:500 !important;padding:7px 14px !important;
+  box-shadow:none !important;transform:none !important;
+}
+div[data-testid="column"] .stButton>button:hover{
+  border-color:rgba(168,85,247,0.4) !important;
+  color:#a855f7 !important;
+  background:rgba(168,85,247,0.05) !important;
+  transform:none !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -53,13 +246,10 @@ def baglanti():
     anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
     pinecone_key = os.environ.get("PINECONE_API_KEY")
     voyage_key = os.environ.get("VOYAGE_API_KEY")
-
     client = Anthropic(api_key=anthropic_key)
     voyage = voyageai.Client(api_key=voyage_key) if VOYAGE_AVAILABLE and voyage_key else None
-
     if not PINECONE_AVAILABLE or not pinecone_key:
         return None, client, voyage
-
     try:
         pc = Pinecone(api_key=pinecone_key)
         index_name = "vergiai"
@@ -91,7 +281,7 @@ def ara(soru, n=5):
                 parcalar.append(meta.get('metin', ''))
                 kaynaklar.append({'belge': meta.get('kaynak', meta.get('belge', '')), 'sayfa': meta.get('sayfa', 1)})
         return parcalar, kaynaklar
-    except Exception as e:
+    except:
         return [], []
 
 def cevap_al(soru, gecmis):
@@ -111,15 +301,36 @@ def cevap_al(soru, gecmis):
 for k, v in [("gecmis", []), ("mesajlar", [])]:
     if k not in st.session_state: st.session_state[k] = v
 
-logo_html = f'''<div class="va-topbar">
-    <div class="va-logo" style="cursor:pointer" onclick="window.location.reload()" title="Ana Sayfaya Don">vergi<span class="va-logo-ai">AI</span></div>
-    <div class="va-badge"><span class="va-pdot"></span>{belge_sayisi:,} BELGE</div>
-</div>'''
-st.markdown(logo_html, unsafe_allow_html=True)
+# Topbar
+col_logo, col_badge = st.columns([4, 1])
+with col_logo:
+    st.markdown('<div class="va-logo-btn">', unsafe_allow_html=True)
+    if st.button("vergiAI", key="logo"):
+        st.session_state.gecmis = []
+        st.session_state.mesajlar = []
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+with col_badge:
+    st.markdown(f'<div style="display:flex;justify-content:flex-end;padding-top:4px"><div class="va-badge"><span class="va-pdot"></span>{belge_sayisi:,} KAYIT</div></div>', unsafe_allow_html=True)
 
+# Hero
 if not st.session_state.mesajlar:
-    st.markdown('<div class="va-hero"><div class="va-eyebrow">Turk Vergi Mevzuati · Yapay Zeka Asistani</div><div class="va-title"><span class="va-title-vergi">vergi</span><span class="va-title-ai">AI</span></div><div class="va-sub">Vergi kanunlarini saniyeler icinde ogrenin - kaynaklari ile birlikte.</div><div class="va-chips"><div class="va-chip">Anlik mevzuat aramasi</div><div class="va-chip">Kaynak alintisi</div><div class="va-chip">Claude AI destekli</div></div></div>', unsafe_allow_html=True)
+    st.markdown(f'''
+    <div class="va-hero">
+      <div class="va-eyebrow">Turk Vergi Mevzuati &middot; Yapay Zeka</div>
+      <div class="va-title">
+        <span class="va-title-vergi">vergi</span><span class="va-title-ai">AI</span>
+      </div>
+      <div class="va-sub">Vergi sorularinizi saniyelerde yanitliyoruz &mdash; kaynakli, guncel, guvenilir.</div>
+      <div class="va-chips">
+        <div class="va-chip">⚡ Anlik mevzuat aramasi</div>
+        <div class="va-chip">📋 Kaynak alintisi</div>
+        <div class="va-chip">🔒 {belge_sayisi:,} belge parcasi</div>
+      </div>
+    </div>
+    ''', unsafe_allow_html=True)
 
+# Messages
 if st.session_state.mesajlar:
     for m in st.session_state.mesajlar:
         if m["rol"] == "kullanici":
@@ -130,9 +341,10 @@ if st.session_state.mesajlar:
             if m.get("kaynak"):
                 chips = "".join(f'<span class="va-schip">{k}</span>' for k in m["kaynak"].split(" · ") if k)
                 kaynak_html = f'<div class="va-source"><span class="va-slabel">KAYNAK</span>{chips}</div>'
-            st.markdown(f'<div class="va-msg-bot"><div class="va-avatar">⚖</div><div class="va-bot-text">{html_icerik}{kaynak_html}</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="va-msg-bot"><div class="va-avatar">⚖</div><div class="va-bot-card">{html_icerik}{kaynak_html}</div></div>', unsafe_allow_html=True)
     st.markdown('<hr class="va-divider">', unsafe_allow_html=True)
 
+# Input form
 with st.form("chat", clear_on_submit=True):
     col1, col2 = st.columns([5, 1])
     with col1:
@@ -149,14 +361,14 @@ if gonder and soru.strip():
         son_cevap = anlik
         son_kaynaklar = kaynaklar
         html_anlik = md_to_html(son_cevap)
-        stream_kutu.markdown(f'<div class="va-msg-bot"><div class="va-avatar">⚖</div><div class="va-bot-text">{html_anlik}</div></div>', unsafe_allow_html=True)
+        stream_kutu.markdown(f'<div class="va-msg-bot"><div class="va-avatar">⚖</div><div class="va-bot-card">{html_anlik}</div></div>', unsafe_allow_html=True)
     st.session_state.gecmis += [{"role":"user","content":soru}, {"role":"assistant","content":son_cevap}]
     kaynak_str = " · ".join(set(f"{k['belge']} S.{k['sayfa']}" for k in son_kaynaklar)) if son_kaynaklar else ""
     st.session_state.mesajlar.append({"rol": "bot", "icerik": son_cevap, "kaynak": kaynak_str})
     st.rerun()
 
 if st.session_state.mesajlar:
-    st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="height:6px"></div>', unsafe_allow_html=True)
     _, c = st.columns([5,1])
     with c:
         if st.button("Ana Sayfa", key="anasayfa"):
