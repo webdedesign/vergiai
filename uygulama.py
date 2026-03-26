@@ -150,8 +150,8 @@ header[data-testid="stHeader"],footer,section[data-testid="stSidebar"]{display:n
 
 /* Input */
 .stTextInput>div>div>input{
-  background:rgba(255,255,255,0.04) !important;
-  border:1.5px solid rgba(255,255,255,0.08) !important;
+  background:#111118 !important;
+  border:1.5px solid rgba(255,255,255,0.1) !important;
   border-radius:16px !important;color:#f0ebe0 !important;
   font-family:'Plus Jakarta Sans',sans-serif !important;
   font-size:15px !important;padding:16px 20px !important;
