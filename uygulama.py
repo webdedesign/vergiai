@@ -209,12 +209,12 @@ header[data-testid="stHeader"],footer,section[data-testid="stSidebar"]{display:n
   border-radius:4px 18px 18px 18px;
   padding:16px 18px;
 }
-.va-bot-card p{color:#e0dbd0;font-size:14px;line-height:1.85;margin-bottom:10px;text-align:justify;font-family:'Plus Jakarta Sans',sans-serif}
+.va-bot-card p{color:#f0ebe0;font-size:14px;line-height:1.85;margin-bottom:10px;text-align:justify;font-family:'Plus Jakarta Sans',sans-serif}
 .va-bot-card h1,.va-bot-card h2,.va-bot-card h3{color:#f0ebe0;font-weight:700;font-size:15px;margin:14px 0 8px;font-family:'Plus Jakarta Sans',sans-serif}
 .va-bot-card strong{color:#f0ebe0;font-weight:600}
-.va-bot-card em{color:#e0dbd0;font-style:italic}
+.va-bot-card em{color:#f0ebe0;font-style:italic}
 .va-bot-card ul{margin:6px 0 10px 18px}
-.va-bot-card li{color:#e0dbd0;font-size:14px;line-height:1.8;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif}
+.va-bot-card li{color:#f0ebe0;font-size:14px;line-height:1.8;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif}
 .va-bot-card hr{border:none;border-top:1px solid rgba(255,255,255,0.06);margin:10px 0}
 
 /* Source chips */
