@@ -150,9 +150,9 @@ header[data-testid="stHeader"],footer,section[data-testid="stSidebar"]{display:n
 
 /* Input */
 .stTextInput>div>div>input{
-  background:#111118 !important;
+  background:#ffffff !important;
   border:1.5px solid rgba(255,255,255,0.1) !important;
-  border-radius:16px !important;color:#f0ebe0 !important;
+  border-radius:16px !important;color:#0a0a0f !important;
   font-family:'Plus Jakarta Sans',sans-serif !important;
   font-size:15px !important;padding:16px 20px !important;
   caret-color:#a855f7 !important;
@@ -164,7 +164,7 @@ header[data-testid="stHeader"],footer,section[data-testid="stSidebar"]{display:n
   box-shadow:0 0 0 3px rgba(168,85,247,0.08) !important;
   background:rgba(255,255,255,0.06) !important;
 }
-.stTextInput>div>div>input::placeholder{color:#333 !important}
+.stTextInput>div>div>input::placeholder{color:#999 !important}
 .stTextInput label{display:none !important}
 
 /* Send button */
