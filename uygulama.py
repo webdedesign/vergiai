@@ -121,9 +121,9 @@ header[data-testid="stHeader"],footer,section[data-testid="stSidebar"]{display:n
 /* Hero */
 .va-hero{text-align:center;padding:52px 0 44px;position:relative;z-index:10}
 .va-eyebrow{
-  font-family:'JetBrains Mono',monospace;font-size:10px;
-  letter-spacing:4px;color:#7c3aed;text-transform:uppercase;
-  margin-bottom:20px;opacity:0.9;
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+  letter-spacing:3px;color:#a855f7;text-transform:uppercase;
+  margin-bottom:20px;opacity:1;
 }
 .va-title{
   font-weight:800;font-size:clamp(48px,9vw,82px);
@@ -138,7 +138,7 @@ header[data-testid="stHeader"],footer,section[data-testid="stSidebar"]{display:n
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   filter:drop-shadow(0 0 40px rgba(168,85,247,0.4));
 }
-.va-sub{font-size:15px;font-weight:400;color:#555;margin-bottom:28px;line-height:1.6}
+.va-sub{font-size:15px;font-weight:500;color:#999;margin-bottom:28px;line-height:1.6}
 .va-chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
 .va-chip{
   display:inline-flex;align-items:center;gap:6px;
@@ -263,6 +263,11 @@ div[data-testid="column"] .stButton>button:hover{
 .va-eye-anim2{animation:va-blink 4s ease-in-out infinite 0.08s}
 @keyframes va-blink{0%,88%,100%{transform:scaleY(1)}93%{transform:scaleY(0.08)}}
 
+
+/* Hide form submit hint */
+.stForm small, .stForm [data-testid="InputInstructions"], 
+small[data-testid="InputInstructions"], 
+.stTextInput small{display:none !important}
 </style>
 """, unsafe_allow_html=True)
 
@@ -372,7 +377,7 @@ if st.session_state.mesajlar:
     st.markdown('<hr class="va-divider">', unsafe_allow_html=True)
 
 # Input form
-with st.form("chat", clear_on_submit=True):
+with st.form("chat", clear_on_submit=True, border=False):
     col1, col2 = st.columns([5, 1])
     with col1:
         soru = st.text_input("soru", value="", placeholder="Vergi mevzuati hakkinda sorunuzu yazin...", label_visibility="collapsed")
