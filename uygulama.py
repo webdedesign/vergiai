@@ -240,40 +240,17 @@ div[data-testid="column"] .stButton>button:hover{
   transform:none !important;
 }
 
-/* Animated bot character */
-.va-bot-avatar{width:44px;flex-shrink:0;margin-top:2px}
-.va-char{display:flex;justify-content:center;animation:va-float 3s ease-in-out infinite}
-@keyframes va-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-.va-char-body{
-  position:relative;width:40px;height:36px;
-  background:linear-gradient(145deg,#a855f7,#7c3aed);
-  border-radius:50% 50% 46% 46% / 60% 60% 40% 40%;
-  box-shadow:0 4px 16px rgba(124,58,237,0.5),inset 0 1px 2px rgba(255,255,255,0.2);
-}
-.va-char-tail{
-  position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);
-  width:0;height:0;
-  border-left:7px solid transparent;
-  border-right:4px solid transparent;
-  border-top:8px solid #7c3aed;
-}
-.va-eye{
-  position:absolute;top:10px;
-  width:10px;height:10px;
-  background:#0a0a0f;border-radius:50%;
-  overflow:hidden;
-}
-.va-eye::after{
-  content:'';position:absolute;top:2px;left:2px;
-  width:4px;height:4px;
-  background:rgba(255,255,255,0.9);border-radius:50%;
-}
-.va-eye-l{left:7px;animation:va-blink 4s ease-in-out infinite}
-.va-eye-r{right:7px;animation:va-blink 4s ease-in-out infinite 0.1s}
-@keyframes va-blink{
-  0%,90%,100%{transform:scaleY(1)}
   95%{transform:scaleY(0.1)}
 }
+
+/* Bot character */
+.va-bot-avatar{width:48px;flex-shrink:0;display:flex;align-items:flex-start;padding-top:2px;overflow:visible}
+.va-bot-char{overflow:visible;animation:va-float 3s ease-in-out infinite}
+@keyframes va-float{0%,100%{transform:translateY(0px)}50%{transform:translateY(-4px)}}
+.va-eye-anim{animation:va-blink 4s ease-in-out infinite}
+.va-eye-anim2{animation:va-blink 4s ease-in-out infinite 0.08s}
+@keyframes va-blink{0%,88%,100%{transform:scaleY(1)}93%{transform:scaleY(0.08)}}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -376,7 +353,7 @@ if st.session_state.mesajlar:
             if m.get("kaynak"):
                 chips = "".join(f'<span class="va-schip">{k}</span>' for k in m["kaynak"].split(" · ") if k)
                 kaynak_html = f'<div class="va-source"><span class="va-slabel">KAYNAK</span>{chips}</div>'
-            st.markdown(f'<div class="va-msg-bot"><div class="va-bot-avatar"><div class="va-char"><div class="va-char-body"><div class="va-eye va-eye-l"></div><div class="va-eye va-eye-r"></div><div class="va-char-tail"></div></div></div></div><div class="va-bot-card">{html_icerik}{kaynak_html}</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="va-msg-bot"><div class="va-bot-avatar"><svg class="va-bot-char" width="44" height="52" viewBox="0 0 44 52" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="bg" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#7c3aed"/></radialGradient><radialGradient id="eye-bg" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#1a0a2e"/><stop offset="100%" stop-color="#0a0a0f"/></radialGradient></defs><!-- Body --><ellipse cx="22" cy="20" rx="20" ry="19" fill="url(#bg)" filter="drop-shadow(0 4px 8px rgba(124,58,237,0.6))"/><!-- Tail --><polygon points="14,36 22,46 26,36" fill="#7c3aed"/><!-- Left eye --><g class="va-eye-anim" style="transform-origin:13px 19px"><ellipse cx="13" cy="19" rx="6" ry="6.5" fill="url(#eye-bg)"/><circle cx="11" cy="17" r="2" fill="rgba(255,255,255,0.85)"/></g><!-- Right eye --><g class="va-eye-anim2" style="transform-origin:31px 19px"><ellipse cx="31" cy="19" rx="6" ry="6.5" fill="url(#eye-bg)"/><circle cx="29" cy="17" r="2" fill="rgba(255,255,255,0.85)"/></g><!-- Shine --><ellipse cx="26" cy="8" rx="7" ry="3.5" fill="rgba(255,255,255,0.15)" transform="rotate(-20,26,8)"/></svg></div><div class="va-bot-card">{html_icerik}{kaynak_html}</div></div>', unsafe_allow_html=True)
     st.markdown('<hr class="va-divider">', unsafe_allow_html=True)
 
 # Input form
@@ -396,7 +373,7 @@ if gonder and soru.strip():
         son_cevap = anlik
         son_kaynaklar = kaynaklar
         html_anlik = md_to_html(son_cevap)
-        stream_kutu.markdown(f'<div class="va-msg-bot"><div class="va-bot-avatar"><div class="va-char"><div class="va-char-body"><div class="va-eye va-eye-l"></div><div class="va-eye va-eye-r"></div><div class="va-char-tail"></div></div></div></div><div class="va-bot-card">{html_anlik}</div></div>', unsafe_allow_html=True)
+        stream_kutu.markdown(f'<div class="va-msg-bot"><div class="va-bot-avatar"><svg class="va-bot-char" width="44" height="52" viewBox="0 0 44 52" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="bg" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#7c3aed"/></radialGradient><radialGradient id="eye-bg" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#1a0a2e"/><stop offset="100%" stop-color="#0a0a0f"/></radialGradient></defs><!-- Body --><ellipse cx="22" cy="20" rx="20" ry="19" fill="url(#bg)" filter="drop-shadow(0 4px 8px rgba(124,58,237,0.6))"/><!-- Tail --><polygon points="14,36 22,46 26,36" fill="#7c3aed"/><!-- Left eye --><g class="va-eye-anim" style="transform-origin:13px 19px"><ellipse cx="13" cy="19" rx="6" ry="6.5" fill="url(#eye-bg)"/><circle cx="11" cy="17" r="2" fill="rgba(255,255,255,0.85)"/></g><!-- Right eye --><g class="va-eye-anim2" style="transform-origin:31px 19px"><ellipse cx="31" cy="19" rx="6" ry="6.5" fill="url(#eye-bg)"/><circle cx="29" cy="17" r="2" fill="rgba(255,255,255,0.85)"/></g><!-- Shine --><ellipse cx="26" cy="8" rx="7" ry="3.5" fill="rgba(255,255,255,0.15)" transform="rotate(-20,26,8)"/></svg></div><div class="va-bot-card">{html_anlik}</div></div>', unsafe_allow_html=True)
     st.session_state.gecmis += [{"role":"user","content":soru}, {"role":"assistant","content":son_cevap}]
     kaynak_str = " · ".join(set(f"{k['belge']} S.{k['sayfa']}" for k in son_kaynaklar)) if son_kaynaklar else ""
     st.session_state.mesajlar.append({"rol": "bot", "icerik": son_cevap, "kaynak": kaynak_str})
