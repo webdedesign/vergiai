@@ -74,15 +74,27 @@ header[data-testid="stHeader"],footer,section[data-testid="stSidebar"]{display:n
 
 /* Logo button */
 .va-logo-btn button{
-  background:transparent !important;border:none !important;padding:0 !important;
-  box-shadow:none !important;font-weight:800 !important;font-size:18px !important;
-  letter-spacing:-0.5px !important;color:#f0ebe0 !important;
-  font-family:'Plus Jakarta Sans',sans-serif !important;width:auto !important;
-  text-transform:none !important;
+  background:transparent !important;border:none !important;
+  padding:0 !important;box-shadow:none !important;
+  font-weight:800 !important;font-size:20px !important;
+  letter-spacing:-0.5px !important;
+  color:#f0ebe0 !important;
+  font-family:'Plus Jakarta Sans',sans-serif !important;
+  width:auto !important;text-transform:none !important;
+  outline:none !important;
 }
-.va-logo-btn button:hover{
+.va-logo-btn button:hover,.va-logo-btn button:focus,.va-logo-btn button:active{
   transform:none !important;background:transparent !important;
-  box-shadow:none !important;color:#ffc040 !important;
+  box-shadow:none !important;color:#a855f7 !important;
+  outline:none !important;border:none !important;
+}
+.va-logo-btn > div > button,
+.va-logo-btn .stButton > button{
+  background:transparent !important;
+  background-color:transparent !important;
+  border:none !important;box-shadow:none !important;
+  padding:0 !important;width:auto !important;
+  min-height:0 !important;height:auto !important;
 }
 .va-logo-ai-span{
   background:linear-gradient(135deg,#ffc040,#ff8c00);
@@ -332,6 +344,9 @@ if not st.session_state.mesajlar:
       <div class="va-eyebrow">Turk Vergi Mevzuati &middot; Yapay Zeka</div>
       <div class="va-title">
         <span class="va-title-vergi">vergi</span><span class="va-title-ai">AI</span>
+      </div>
+      <div style="display:flex;justify-content:center;margin:20px 0 8px">
+        <svg class="va-bot-char" width="44" height="52" viewBox="0 0 44 52" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="bg2" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#7c3aed"/></radialGradient><radialGradient id="eye-bg2" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#1a0a2e"/><stop offset="100%" stop-color="#0a0a0f"/></radialGradient></defs><ellipse cx="22" cy="20" rx="20" ry="19" fill="url(#bg2)" filter="drop-shadow(0 4px 8px rgba(124,58,237,0.6))"/><polygon points="14,36 22,46 26,36" fill="#7c3aed"/><g class="va-eye-anim" style="transform-origin:13px 19px"><ellipse cx="13" cy="19" rx="6" ry="6.5" fill="url(#eye-bg2)"/><circle cx="11" cy="17" r="2" fill="rgba(255,255,255,0.85)"/></g><g class="va-eye-anim2" style="transform-origin:31px 19px"><ellipse cx="31" cy="19" rx="6" ry="6.5" fill="url(#eye-bg2)"/><circle cx="29" cy="17" r="2" fill="rgba(255,255,255,0.85)"/></g><ellipse cx="26" cy="8" rx="7" ry="3.5" fill="rgba(255,255,255,0.15)" transform="rotate(-20,26,8)"/></svg>
       </div>
       <div class="va-sub">Vergi sorularinizi saniyelerde yanitliyoruz &mdash; kaynakli, guncel, guvenilir.</div>
       <div class="va-chips">
